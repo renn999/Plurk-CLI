@@ -1,0 +1,27 @@
+# plurk(1) completion
+
+have plurk &&
+_plurk()
+{
+    local cur
+
+    COMPREPLY=()
+    _get_comp_words_by_ref cur
+    
+    if [ $COMP_CWORD -eq 1 ]; then
+        COMPREPLY=( $( compgen -W 'add get resp_add resp_get get_unread_count get_unread' -- "$cur" ) )
+    fi
+    if [ $COMP_CWORD -eq 2 -a "${COMP_WORDS[1]}" == "add" -o $COMP_CWORD -eq 3 -a "${COMP_WORDS[1]}" == "resp_add" ]; then
+        COMPREPLY=( $( compgen -W 'loves likes shares gives hates wants has will asks wishes was feels thinks says is : freestyle hopes needs wonders' -- "$cur" ) )
+    fi
+
+} &&
+complete -F _plurk plurk
+
+# Local variables:
+# mode: shell-script
+# sh-basic-offset: 4
+# sh-indent-comment: t
+# indent-tabs-mode: nil
+# End:
+# ex: ts=4 sw=4 et filetype=sh

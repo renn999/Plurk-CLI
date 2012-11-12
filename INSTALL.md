@@ -1,0 +1,34 @@
+# Install [plurk-oauth](https://github.com/clsung/plurk-oauth)
+
+## git clone from https://github.com/clsung/plurk-oauth
+    
+    git clone https://github.com/clsung/plurk-oauth
+
+## build & install
+    
+    python setup.py build
+    sudo python setup.py install
+
+# Install termcolor
+
+    sudo pip install termcolor
+    or
+    sudo easy_install termcolor
+
+# Insatll plurk-cli
+
+##In Ubuntu:
+
+copy `plurk` to execute folder `/usr/bin`
+
+    sudo cp plurk /usr/bin
+
+execute `plurk`
+
+    sudo chmod +x /usr/bin
+
+copy completion file 
+
+    sudo cp plurk-bc /etc/bash_completion.d/plurk
+
+restart terminal. And happy plurk useing cli.
