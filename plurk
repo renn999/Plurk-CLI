@@ -165,18 +165,16 @@ def get_last_timeLine_read():
   f.close()
 
 
-def out_put(p): 
+def out_put(p):
   last_time=None
   first_time = None
   plurk_ids = []
   print '-'*int(columns)
   for h, i in enumerate(reversed(p['plurks'])):
     qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
-    plurk_user = p['plurk_users'][str(i['owner_id'])]
-    plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+    plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
     if i.has_key('replurker_id') and i['replurker_id']:
-      replurk_user = p['plurk_users'][str(i['replurker_id'])]
-      replurk_uname = replurk_user['display_name'] if replurk_user.has_key('display_name') else replurk_user['nick_name']
+      replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
       print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
     else:
       print plurk_uname+' ' + qu
@@ -202,11 +200,9 @@ def out_put_single(p):
   print '='*int(columns)
   i=p['plurk']
   qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
-  plurk_user = p['plurk_users'][str(i['owner_id'])]
-  plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+  plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
   if i.has_key('replurker_id') and i['replurker_id']:
-    replurk_user = p['plurk_users'][str(i['replurker_id'])]
-    replurk_uname = replurk_user['display_name'] if replurk_user.has_key('display_name') else replurk_user['nick_name']
+    replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
     print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
   else:
     print plurk_uname+' ' + qu
@@ -219,8 +215,7 @@ def out_put_single(p):
 def out_put_resp(p):
   for i in p['responses']:
     qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
-    plurk_user = p['friends'][str(i['user_id'])]
-    plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+    plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
     print plurk_uname+' ' + qu
     print i['content_raw']
     j = 'respond_id: '+str(i['id'])
@@ -228,6 +223,17 @@ def out_put_resp(p):
     print '-'*int(columns)
   print 'Total: %d response(s)' % len(p['responses'])
 
+def user_coloer(plurk_user):
+  plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+  if plurk_user['name_color'] == '0A9C17':
+    plurk_uname = colored(plurk_uname, 'green', attrs=['bold'])
+  elif plurk_user['name_color'] == '2264D6':
+    plurk_uname = colored(plurk_uname, 'blue', attrs=['bold'])
+  elif plurk_user['name_color'] == 'E41227':
+    plurk_uname = colored(plurk_uname, 'red', attrs=['bold'])
+  else:
+    plurk_uname = colored(plurk_uname, attrs=['bold'])
+  return plurk_uname
 
 def add_resp(argv):
   data=dict()
