@@ -3,8 +3,10 @@
 import sys, json
 from plurk_oauth.PlurkAPI import PlurkAPI
 import os,time
+from termcolor import colored
+
 rows, columns = os.popen('stty size', 'r').read().split()
-LIMIT=30
+LIMIT=20
 USER_HOME=os.path.expanduser('~')
 CONFIG_PATH = os.path.join(USER_HOME,'.plurk-cli')
 if not os.path.isdir(CONFIG_PATH):
@@ -37,7 +39,6 @@ plurk = PlurkAPI(i['consumer_key'],i['consumer_secret'])
 if not os.path.isfile(authorize_file):
   try:
     plurk.authorize()
-    #plurk.authorize()
     f = open(authorize_file,'w+')
     i = dict()
     i = plurk._oauth.oauth_token
@@ -75,15 +76,28 @@ def main(argv):
     add_plurk(argv[1:])
   elif argv[0] == 'get':
     data={'limit':LIMIT}
-    if '--limit' in argv:
+    if '--offset' in argv:
       try:
-        limit = int(argv[argv.index('--limit')+1])
+        offset = argv[argv.index('--offset')+1]
+        test_time = time.strptime(offset,'%Y-%m-%dT%H:%M:%S')
       except:
         pass
       else:
-        data['limit'] = limit
+        data['offset'] = offset
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
+  elif argv[0] == 'del':
+    try:
+      plurk_id = int(argv[1])
+    except:
+      print 'Please input Plurk id in integer not Base36.'
+      exit()
+    data = {'plurk_id':plurk_id}
+    p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
+    if p.has_key('error_text'):
+      print p['error_text']
+    else:
+      print 'OK!'
   elif argv[0] == 'resp_add':
     add_resp(argv[1:])
   elif argv[0] == 'resp_get':
@@ -97,7 +111,8 @@ def main(argv):
     data={'offset':time.strftime('%Y-%m-%dT%H:%M:%S',a)}
     np = plurk.callAPI('/APP/Polling/getPlurks',data)
     p['new'] = len(np['plurks'])
-    print "New: %d All: %d My: %d Private: %d Responded: %d Favorite: %d" % (p['new'],p['all'],p['my'],p['private'],p['responded'],p['favorite'])
+    print "New: %d All: %d My: %d Private: %d Responded: %d Favorite: %d" % \
+          (p['new'],p['all'],p['my'],p['private'],p['responded'],p['favorite'])
   elif argv[0] == 'get_unread':
     data = {'limit': LIMIT}
     if '--new' in argv:
@@ -150,16 +165,21 @@ def get_last_timeLine_read():
   f.close()
 
 
-def out_put(p):
+def out_put(p): 
   last_time=None
+  first_time = None
   plurk_ids = []
   print '-'*int(columns)
-  for i in reversed(p['plurks']):
+  for h, i in enumerate(reversed(p['plurks'])):
     qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
+    plurk_user = p['plurk_users'][str(i['owner_id'])]
+    plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
     if i.has_key('replurker_id') and i['replurker_id']:
-      print p['plurk_users'][str(i['replurker_id'])]['display_name'] + ' replurk '+ p['plurk_users'][str(i['owner_id'])]['display_name'] + qu
+      replurk_user = p['plurk_users'][str(i['replurker_id'])]
+      replurk_uname = replurk_user['display_name'] if replurk_user.has_key('display_name') else replurk_user['nick_name']
+      print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
     else:
-      print p['plurk_users'][str(i['owner_id'])]['display_name']+' ' + qu
+      print plurk_uname+' ' + qu
     print i['content_raw']
     j = (str(i['response_count'])+ ' response(s) ' if i['response_count'] else 'no response ' ) +'plurk_id: '+str(i['plurk_id'])
     if (int(i['plurk_type']) | 2) is 3:
@@ -168,20 +188,28 @@ def out_put(p):
       j = 'M ' + j
     print ' '*(int(columns)-len(j)) + j
     print '-'*int(columns)
-    last_time=i['posted']
+    if h == 0:
+      first_time = i['posted']
+    else:
+      last_time = i['posted']
     plurk_ids = plurk_ids + [i['plurk_id']]
-  print 'Total: %d plurks' % len(p['plurks'])
-  return {'last_time':last_time,'plurk_ids':plurk_ids}
+  if first_time != None and last_time != None:
+    print 'Offset From: %s End: %s' % (time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')),time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')))
+  return {'last_time':last_time,'first_time':first_time,'plurk_ids':plurk_ids}
 
 
 def out_put_single(p):
   print '='*int(columns)
   i=p['plurk']
   qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
+  plurk_user = p['plurk_users'][str(i['owner_id'])]
+  plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
   if i.has_key('replurker_id') and i['replurker_id']:
-    print p['plurk_users'][str(i['replurker_id'])]['display_name'] + ' replurk '+ p['plurk_users'][str(i['owner_id'])]['display_name'] + qu
+    replurk_user = p['plurk_users'][str(i['replurker_id'])]
+    replurk_uname = replurk_user['display_name'] if replurk_user.has_key('display_name') else replurk_user['nick_name']
+    print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
   else:
-    print p['plurk_users'][str(i['owner_id'])]['display_name']+' ' + qu
+    print plurk_uname+' ' + qu
   print i['content_raw']
   j = (str(i['response_count'])+ ' response(s) ' if i['response_count'] else 'no response ' ) +'plurk_id: '+str(i['plurk_id'])
   print ' '*(int(columns)-len(j)) + j
@@ -191,7 +219,9 @@ def out_put_single(p):
 def out_put_resp(p):
   for i in p['responses']:
     qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
-    print p['friends'][str(i['user_id'])]['display_name']+' ' + qu
+    plurk_user = p['friends'][str(i['user_id'])]
+    plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+    print plurk_uname+' ' + qu
     print i['content_raw']
     j = 'respond_id: '+str(i['id'])
     print ' '*(int(columns)-len(j)) + j
