@@ -16,26 +16,8 @@ if not os.path.isdir(CONFIG_PATH):
     print 'Make configure path %s Faild' % CONFIG_PATH
     exit()
 LAST_TIME_READ = os.path.join(CONFIG_PATH,'last_time_read')
-consumer_file = os.path.join(CONFIG_PATH,'consumer_keys')
-if not os.path.isfile(consumer_file):
-  try:
-    f = open(consumer_file,'w+')
-    i = dict()
-    i['consumer_key'] = raw_input('Consumer Key: ')
-    i['consumer_secret'] = raw_input('Consumer Secret: ')
-    f.write(json.dumps(i))
-  except:
-    print 'there is something wrong when writing the config to %s.' % consumer_file
-    exit()
-else:
-  try:
-    f = open(consumer_file,'r')
-    i = json.loads(f.read())
-  except:
-    print 'there is something wrong when reading the config to %s.' % consumer_file
-    exit()
+plurk = PlurkAPI('XHYblwvESclp','fWojEnk17x15SFwVy3oAzCTDytvYEZ11')
 authorize_file = os.path.join(CONFIG_PATH,'authorize_keys')
-plurk = PlurkAPI(i['consumer_key'],i['consumer_secret'])
 if not os.path.isfile(authorize_file):
   try:
     plurk.authorize()
@@ -189,16 +171,19 @@ def out_put(p):
     plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
     if i.has_key('replurker_id') and i['replurker_id']:
       replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
-      print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
+      print '%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
     else:
       print plurk_uname+' ' + qu
     print i['content_raw']
-    j = (str(i['response_count'])+ ' response(s) ' if i['response_count'] else 'no response ' ) +'plurk_id: '+str(i['plurk_id'])
+    l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
+    k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
+    m = 'plurk_id: '+str(i['plurk_id'])
+    j = ''
     if (int(i['plurk_type']) | 2) is 3:
       j = 'P ' + j
     if int(i['is_unread']) is 2:
       j = 'M ' + j
-    print ' '*(int(columns)-len(j)) + j
+    print ' '*(int(columns)-len(j)-len(' '.join([l,m]))) + j + ' '.join([k,m])
     print '-'*int(columns)
     if h == 0:
       first_time = i['posted']
@@ -261,7 +246,7 @@ def qualifier_color(qu,qu_tr=None):
   elif qu in ['hates', 'has', 'was', ':', 'freestyle']:
     bg = 'on_grey'
     fg = 'white'
-  elif qu in ['wants', 'wishes', 'needs']:
+  elif qu in ['wants', 'wishes', 'needs', 'replurk']:
     bg = 'on_green'
     fg = 'white'
   elif qu in ['will', 'hopes', 'asks']:

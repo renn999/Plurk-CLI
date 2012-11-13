@@ -21,11 +21,11 @@
 
 copy `plurk` to execute folder `/usr/bin`
 
-    sudo cp plurk /usr/bin
+    sudo cp plurk /usr/bin/plurk
 
 execute `plurk`
 
-    sudo chmod +x /usr/bin
+    sudo chmod +x /usr/bin/plurk
 
 copy completion file 
 
