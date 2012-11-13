@@ -84,6 +84,12 @@ def main(argv):
         pass
       else:
         data['offset'] = offset
+    if '--filter' in argv:
+      filter_var = argv[argv.index('--filter')+1]
+      if filter_var in ['only_user', 'only_responded', 'only_private', 'only_favorite']:
+        data['filter'] = filter_var
+      else:
+        data['filter'] = None
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
   elif argv[0] in ['del', 'edit']:
@@ -177,7 +183,9 @@ def out_put(p):
   plurk_ids = []
   print '-'*int(columns)
   for h, i in enumerate(reversed(p['plurks'])):
-    qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
+    if not i.has_key('qualifier_translated'):
+      i['qualifier_translated'] = None
+    qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
     if i.has_key('replurker_id') and i['replurker_id']:
       replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
@@ -204,7 +212,9 @@ def out_put(p):
 def out_put_single(p):
   print '='*int(columns)
   i=p['plurk']
-  qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
+  if not i.has_key('qualifier_translated'):
+    i['qualifier_translated'] = None
+  qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
   plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
   if i.has_key('replurker_id') and i['replurker_id']:
     replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
@@ -219,7 +229,9 @@ def out_put_single(p):
 
 def out_put_resp(p):
   for i in p['responses']:
-    qu = i['qualifier_translated'] if i.has_key('qualifier_translated') else i['qualifier']
+    if not i.has_key('qualifier_translated'):
+      i['qualifier_translated'] = None
+    qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
     print plurk_uname+' ' + qu
     print i['content_raw']
@@ -241,6 +253,29 @@ def user_coloer(plurk_user):
   else:
     plurk_uname = colored(plurk_uname, attrs=['bold'])
   return plurk_uname
+
+def qualifier_color(qu,qu_tr=None):
+  if qu in ['loves', 'likes', 'shares', 'gives', 'says', 'is']:
+    bg = 'on_red'
+    fg = 'white'
+  elif qu in ['hates', 'has', 'was', ':', 'freestyle']:
+    bg = 'on_grey'
+    fg = 'white'
+  elif qu in ['wants', 'wishes', 'needs']:
+    bg = 'on_green'
+    fg = 'white'
+  elif qu in ['will', 'hopes', 'asks']:
+    bg = 'on_magenta'
+    fg = 'white'
+  elif qu in ['wonders']:
+    bg = 'on_cyan'
+    fg = 'white'
+  elif qu in ['feels', 'thinks']:
+    bg = 'on_blue'
+    fg = 'white'
+  if not qu_tr:
+    qu_tr = qu
+  return colored(qu_tr, fg, bg)
 
 def add_resp(argv):
   data=dict()
