@@ -86,14 +86,20 @@ def main(argv):
         data['offset'] = offset
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
-  elif argv[0] == 'del':
+  elif argv[0] in ['del', 'edit']:
     try:
       plurk_id = int(argv[1])
     except:
       print 'Please input Plurk id in integer not Base36.'
       exit()
     data = {'plurk_id':plurk_id}
-    p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
+    if argv[0] == 'del':
+      p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
+    elif argv[0] == 'edit' and len(argv) == 3:
+      data['content'] = argv[2]
+      p = plurk.callAPI('/APP/Timeline/plurkEdit',data)
+    else:
+      print "there is something wrong in argvalues."
     if p.has_key('error_text'):
       print p['error_text']
     else:
@@ -188,8 +194,7 @@ def out_put(p):
     print '-'*int(columns)
     if h == 0:
       first_time = i['posted']
-    else:
-      last_time = i['posted']
+    last_time = i['posted']
     plurk_ids = plurk_ids + [i['plurk_id']]
   if first_time != None and last_time != None:
     print 'Offset From: %s End: %s' % (time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')),time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')))
@@ -225,6 +230,8 @@ def out_put_resp(p):
 
 def user_coloer(plurk_user):
   plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+  if not plurk_user.has_key('name_color'):
+    plurk_user['name_color'] = None
   if plurk_user['name_color'] == '0A9C17':
     plurk_uname = colored(plurk_uname, 'green', attrs=['bold'])
   elif plurk_user['name_color'] == '2264D6':
