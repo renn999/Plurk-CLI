@@ -188,29 +188,7 @@ def out_put(p):
   plurk_ids = []
   print '-'*int(columns)
   for h, i in enumerate(reversed(p['plurks'])):
-    if not i.has_key('qualifier_translated'):
-      i['qualifier_translated'] = None
-    qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
-    plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
-    if i.has_key('replurker_id') and i['replurker_id']:
-      replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
-      print '%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
-    else:
-      print plurk_uname+' ' + qu
-    print i['content_raw']
-    l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
-    k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
-    m = 'plurk_id: '+str(i['plurk_id'])
-    j = ''
-    if i.has_key('favorite') and i['favorite']:
-      j = 'F ' +j
-    if i.has_key('replurked') and i['replurked']:
-      j = 'R ' +j
-    if (int(i['plurk_type']) | 2) is 3:
-      j = 'P ' + j
-    if int(i['is_unread']) is 2:
-      j = 'M ' + j
-    print ' '*(int(columns)-len(j)-len(' '.join([l,m]))) + j + ' '.join([k,m])
+    out_put_plurk(i,p['plurk_users'])
     print '-'*int(columns)
     if h == 0:
       first_time = i['posted']
@@ -220,23 +198,30 @@ def out_put(p):
     print 'Offset From: %s End: %s' % (time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')),time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')))
   return {'last_time':last_time,'first_time':first_time,'plurk_ids':plurk_ids}
 
-
-def out_put_single(p):
-  print '='*int(columns)
-  i=p['plurk']
+def out_put_plurk(i,p):
   if not i.has_key('qualifier_translated'):
     i['qualifier_translated'] = None
   qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
-  plurk_uname = user_coloer(p['plurk_users'][str(i['owner_id'])])
+  plurk_uname = user_coloer(p[str(i['owner_id'])])
   if i.has_key('replurker_id') and i['replurker_id']:
-    replurk_uname = user_coloer(p['plurk_users'][str(i['replurker_id'])])
-    print '%s replurk %s %s' % ( replurk_uname, plurk_uname, qu)
+    replurk_uname = user_coloer(p[str(i['replurker_id'])])
+    print '%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
   else:
     print plurk_uname+' ' + qu
   print i['content_raw']
-  j = (str(i['response_count'])+ ' response(s) ' if i['response_count'] else 'no response ' ) +'plurk_id: '+str(i['plurk_id'])
-  print ' '*(int(columns)-len(j)) + j
-  print '='*int(columns)
+  l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
+  k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
+  m = 'plurk_id: '+str(i['plurk_id'])
+  j = ''
+  if i.has_key('favorite') and i['favorite']:
+    j = 'F ' +j
+  if i.has_key('replurked') and i['replurked']:
+    j = 'R ' +j
+  if (int(i['plurk_type']) | 2) is 3:
+    j = 'P ' + j
+  if int(i['is_unread']) is 2:
+    j = 'M ' + j
+  print ' '*(int(columns)-len(j)-len(' '.join([l,m]))) + j + ' '.join([k,m])
 
 
 def out_put_resp(p):
@@ -294,7 +279,9 @@ def add_resp(argv):
 
 def get_resp(argv):
   p = plurk.callAPI('/APP/Timeline/getPlurk',{'plurk_id':argv[0]})
-  out_put_single(p)
+  print '='*int(columns)
+  out_put_plurk(p['plurk'],p['plurk_users'])
+  print '='*int(columns)
   p = plurk.callAPI('/APP/Responses/get',{'plurk_id':argv[0]})
   out_put_resp(p)
 
