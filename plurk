@@ -54,6 +54,12 @@ def b36en(num):
   return ''.join(arr)
 
 def main(argv):
+  api = {
+    'mute':   '/APP/Timeline/mutePlurks',
+    'unmute': '/APP/Timeline/unmutePlurks',
+    'favor':  '/APP/Timeline/favoritePlurks',
+    'unfavor':'/APP/Timeline/unfavoritePlurks',
+    'mar':    '/APP/Timeline/markAsRead'}
   if argv[0]=='add':
     add_plurk(argv[1:])
   elif argv[0] == 'get':
@@ -96,6 +102,8 @@ def main(argv):
     add_resp(argv[1:])
   elif argv[0] == 'resp_get':
     get_resp(argv[1:])
+  elif argv[0] == 'resp_del':
+    print 'Unbuild!'
   elif argv[0] == 'get_unread_count':
     p = plurk.callAPI('/APP/Polling/getUnreadCount')
     f = open(LAST_TIME_READ,'r+')
@@ -123,7 +131,22 @@ def main(argv):
       p = plurk.callAPI('/APP/Timeline/getUnreadPlurks',data)
       rp = out_put(p)
       if rp['plurk_ids'] and '--withmar' in argv:
-        plurk.callAPI('/APP/Timeline/markAsRead',{'ids':rp['plurk_ids']})
+        plurk.callAPI('/APP/Timeline/markAsRead',{'ids':rp['plurk_ids'],'note_position':'true'})
+  elif argv[0] in list(api.keys()):
+    data = {'ids':[int(i) for i in argv[1:]]}
+    p = plurk.callAPI(api[argv[0]],data)
+    if p['success_text'] != "ok":
+      print "It's something wrong"
+    else:
+      print "OK!"
+  elif argv[0] in ['replurk','unreplurk']:
+    data = {'ids':[int(i) for i in argv[1:]]}
+    p = plurk.callAPI('/APP/Timeline/'+argv[0],data)
+    for i, j in p['results'].items():
+      if j['success']:
+        print '%s %s success.' % (i, argv[0])
+      else:
+        print '%s %s error. %s' % (i, argv[0], j['error'])
 
 
 def add_plurk(argv):
@@ -150,7 +173,7 @@ def get_last_timeLine_read():
   except:
     last_time = time.strftime('%a, %d %b %Y %H:%M:%S %Z')
     a = time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')
-  data={'offset':time.strftime('%Y-%m-%dT%H:%M:%S',a),'limit':LIMIT}
+  data={'offset':time.strftime('%Y-%m-%dT%H:%M:%S',a),'limit':LIMIT+10}
   p = plurk.callAPI('/APP/Polling/getPlurks',data)
   rp = out_put(p)
   last_time = rp['last_time'] if rp['last_time'] else last_time
@@ -179,6 +202,10 @@ def out_put(p):
     k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
     m = 'plurk_id: '+str(i['plurk_id'])
     j = ''
+    if i.has_key('favorite') and i['favorite']:
+      j = 'F ' +j
+    if i.has_key('replurked') and i['replurked']:
+      j = 'R ' +j
     if (int(i['plurk_type']) | 2) is 3:
       j = 'P ' + j
     if int(i['is_unread']) is 2:
@@ -242,25 +269,19 @@ def user_coloer(plurk_user):
 def qualifier_color(qu,qu_tr=None):
   if qu in ['loves', 'likes', 'shares', 'gives', 'says', 'is']:
     bg = 'on_red'
-    fg = 'white'
   elif qu in ['hates', 'has', 'was', ':', 'freestyle']:
     bg = 'on_grey'
-    fg = 'white'
   elif qu in ['wants', 'wishes', 'needs', 'replurk']:
     bg = 'on_green'
-    fg = 'white'
   elif qu in ['will', 'hopes', 'asks']:
     bg = 'on_magenta'
-    fg = 'white'
   elif qu in ['wonders']:
     bg = 'on_cyan'
-    fg = 'white'
   elif qu in ['feels', 'thinks']:
     bg = 'on_blue'
-    fg = 'white'
   if not qu_tr:
     qu_tr = qu
-  return colored(qu_tr, fg, bg)
+  return colored(qu_tr, 'white', bg)
 
 def add_resp(argv):
   data=dict()
