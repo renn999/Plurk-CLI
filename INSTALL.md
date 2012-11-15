@@ -31,4 +31,8 @@ copy completion file
 
     sudo cp plurk-bc /etc/bash_completion.d/plurk
 
+copy man file
+
+    sudo cp doc/plurk.1.gz /usr/share/man/man1/
+
 restart terminal. And happy plurk useing cli.
