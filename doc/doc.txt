@@ -1,0 +1,81 @@
+NAME
+  plurk - This is a plurk Command Line tool. Let's you need less to open the browser to plurk.
+
+SYNOPSIS
+  plurk add [qualifier] [content] [-p -nc -fc]
+  plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
+  plurk resp_add [plurk_id] [qualifier] [content]
+  plurk resp_get [plurk_id]
+  plurk resp_del [plurk_id] [resp_id]
+  plurk count_unread
+  plurk get_unread [--new --my --responded --private --favorite] [--withmar]
+  plurk del [plurk_id]
+  plurk edit [plurk_id] [content]
+  plurk mute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unmute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk favor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unfavor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk mar [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk get_user_pub [user_id]
+
+SUBCOMMEND
+  
+    add:      Add plurk to timeline.
+    cmd:      plurk add [qualifier] [content] [-p -nc -fc]
+    [qualifier]   The Plurk's qualifier, must be in English. like: says, ...etc.
+    [content]     The Plurk's text.
+    -p            The Plurk is privatley posted to the poster's friends.
+    -nc           The responses are disabled for this plurk.
+    -fc           The only friends can respond to this plurk. If -nc -fc are using together, -nc will be first choice.
+    
+    get:      Get plurk From timeline.
+    cmd:      plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
+    --offset      get the plurks OLDER then offset time. Here is using the UTC time.
+    --filter      Can be only_user, only_responded, only_private or only_favorite.
+    
+    resp_add: Add respons to plurk
+    cmd:      plurk resp_add [plurk_id] [qualifier] [content]
+    [plurk_id]    The plurk id you want to respond.
+    [qualifier]   Same as add.
+    [content]     Same as add.
+
+    resp_get: Get plurk responses.
+    cmd:      plurk resp_get [plurk_id]
+    [plurk_id]    The plurk id you want to read plurk respond.
+
+    resp_del: Delete response.
+    cmd:      plurk resp_del [plurk_id] [resp_id]
+    [plurk_id]    The plurk id you respond to.
+    [resp_id]     The response id you want to delete.
+
+    count_unread: get the unread count. 
+    cmd:      plurk count_unread
+
+    get_unread: Get the unread response plurk.
+    cmd:        plurk get_unread [--new --my --responded --private --favorite] [--withmar]
+    --new         The new plurk until last readed.
+    --my          Unread user plurks.
+    --responded   Unread responded plurks.
+    --private     Unread private plurks.
+    --favorite    Unread favorite plurks.
+    --withmar     With Mark As Read.
+
+    del:        Delete the plurk.
+    cmd:        plurk del [plurk_id]
+    [plurk_id]    The plurk id you want to delete.
+
+    edit:       edit the plurk.
+    cmd:        plurk edit [plurk_id] [content]
+    [plurk_id]    The plurk id you want to edit.
+    [content]     The content of plurk.
+
+    mute, unmute, favor, unfavor, replurk, unreplurk: (Un)Mute, (Un)Favorite, (Un)Replurk
+    cmd:        plurk [mute unmute favor unfavor replurk unreplurk] [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+    
+    [plurk_id#1 plurk_id#2 plurk_id#3 ...]    The plurk ids.
+
+    get_user_pub: Get the other user's PUBLIC plurk's
+    cmd:          plurk get_user_pub [user_id]
+    [user_id]     The other user's id, '@' will be strip.

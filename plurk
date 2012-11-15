@@ -109,7 +109,7 @@ def main(argv):
       print 'ERROR! %s.' % p['error_text']
     else:
       print 'Success!'
-  elif argv[0] == 'get_unread_count':
+  elif argv[0] == 'count_unread':
     p = plurk.callAPI('/APP/Polling/getUnreadCount')
     f = open(LAST_TIME_READ,'r+')
     last_time = f.read()
@@ -173,8 +173,8 @@ def main(argv):
           resp_add [plurk_id] [qualifier] [content]
           resp_get [plurk_id]
           resp_del [plurk_id] [resp_id]
-          get_unread_count
-          get_unread [--new --my --responded --private --favorite]
+          count_unread
+          get_unread [--new --my --responded --private --favorite] [--withmar]
           del [plurk_id]
           edit [plurk_id] [content]
           mute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
@@ -274,8 +274,7 @@ def out_put_resp(p):
       i['qualifier_translated'] = None
     qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
-    print plurk_uname+' ' + qu
-    print i['content_raw']
+    print '%s %s %s' % (plurk_uname, qu, i['content_raw'])
     j = 'respond_id: '+str(i['id'])
     print ' '*(int(columns)-len(j)) + j
     print '-'*int(columns)
