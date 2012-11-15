@@ -103,7 +103,12 @@ def main(argv):
   elif argv[0] == 'resp_get':
     get_resp(argv[1:])
   elif argv[0] == 'resp_del':
-    print 'Unbuild!'
+    data = {'plurk_id': int(argv[1]),'response_id':int(argv[2])}
+    p = plurk.callAPI('/APP/Responses/responseDelete',data)
+    if p.has_key('error_text'):
+      print 'ERROR! %s.' % p['error_text']
+    else:
+      print 'Success!'
   elif argv[0] == 'get_unread_count':
     p = plurk.callAPI('/APP/Polling/getUnreadCount')
     f = open(LAST_TIME_READ,'r+')
@@ -147,6 +152,41 @@ def main(argv):
         print '%s %s success.' % (i, argv[0])
       else:
         print '%s %s error. %s' % (i, argv[0], j['error'])
+  elif argv[0] == 'get_user_pub':
+    data = dict()
+    data['user_id'] = argv[1] if argv[1][0] != '@' else argv[1][1:]
+    data['limit']   = LIMIT
+    if '--offset' in argv:
+      try:
+        offset = argv[argv.index('--offset')+1]
+        test_time = time.strptime(offset,'%Y-%m-%dT%H:%M:%S')
+      except:
+        pass
+      else:
+        data['offset'] = offset
+    p = plurk.callAPI('/APP/Timeline/getPublicPlurks',data)
+    out_put(p)
+  else:
+    print """USAGE:    
+    plurk add [qualifier] [content] [-p -nc -fc]
+          get [--offset [time]]
+          resp_add [plurk_id] [qualifier] [content]
+          resp_get [plurk_id]
+          resp_del [plurk_id] [resp_id]
+          get_unread_count
+          get_unread [--new --my --responded --private --favorite]
+          del [plurk_id]
+          edit [plurk_id] [content]
+          mute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          unmute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          favor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          unfavor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          mar [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+          get_user_pub [user_id]
+
+* readmore on doc."""
 
 
 def add_plurk(argv):
@@ -212,16 +252,20 @@ def out_put_plurk(i,p):
   l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
   k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
   m = 'plurk_id: '+str(i['plurk_id'])
-  j = ''
+  j = {'c':{},'uc':{}}
   if i.has_key('favorite') and i['favorite']:
-    j = 'F ' +j
+    j['uc']['f'] = ' F '
+    j['c']['f']  = colored(j['uc']['f'],'grey','on_cyan', attrs=['dark'])
   if i.has_key('replurked') and i['replurked']:
-    j = 'R ' +j
+    j['uc']['r'] = ' R '
+    j['c']['r']  = colored(j['uc']['r'],'grey','on_green', attrs=['dark'])
   if (int(i['plurk_type']) | 2) is 3:
-    j = 'P ' + j
+    j['uc']['p'] = ' P '
+    j['c']['p']  = colored(j['uc']['p'],'grey','on_yellow', attrs=['dark'])
   if int(i['is_unread']) is 2:
-    j = 'M ' + j
-  print ' '*(int(columns)-len(j)-len(' '.join([l,m]))) + j + ' '.join([k,m])
+    j['uc']['m'] = ' M '
+    j['c']['m']  = colored(j['uc']['m'],'grey','on_white', attrs=['dark'])
+  print ' '*(int(columns)-len(' '.join(list(j['uc'].values())+[l,m]))) + ' '.join(list(j['c'].values())+[k,m])
 
 
 def out_put_resp(p):
@@ -239,6 +283,7 @@ def out_put_resp(p):
 
 def user_coloer(plurk_user):
   plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+  plurk_uname = plurk_uname + '(@%s)' % plurk_user['nick_name']
   if not plurk_user.has_key('name_color'):
     plurk_user['name_color'] = None
   if plurk_user['name_color'] == '0A9C17':

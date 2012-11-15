@@ -1,0 +1,35 @@
+NAME
+  plurk - This is a plurk Command Line tool. Let's you need less to open the browser to plurk.
+
+SYNOPSIS
+  plurk add [qualifier] [content] [-p -nc -fc]
+  plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
+  plurk resp_add [plurk_id] [qualifier] [content]
+  plurk resp_get [plurk_id]
+  plurk resp_del [plurk_id] [resp_id]
+  plurk get_unread_count
+  plurk get_unread [--new --my --responded --private --favorite]
+  plurk del [plurk_id]
+  plurk edit [plurk_id] [content]
+  plurk mute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unmute [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk favor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unfavor [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk mar [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
+  plurk get_user_pub [user_id]
+
+SUBCOMMEND
+  
+    add:          plurk add [qualifier] [content] [-p -nc -fc]
+    [qualifier]   The Plurk's qualifier, must be in English. like: says, ...etc.
+    [content]     The Plurk's text.
+    -p            The Plurk is privatley posted to the poster's friends.
+    -nc           The responses are disabled for this plurk.
+    -fc           The only friends can respond to this plurk. If -nc -fc are using together, -nc will be first choice.
+    
+    get:          plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
+    --offset      get the plurks OLDER then offset time. Here is using the UTC time.
+    
+    

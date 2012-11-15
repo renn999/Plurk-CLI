@@ -9,7 +9,7 @@ _plurk()
     _get_comp_words_by_ref cur
     
     if [ $COMP_CWORD -eq 1 ]; then
-        COMPREPLY=( $( compgen -W 'add get resp_add resp_get resp_del get_unread_count get_unread del edit mute unmute favor unfavor mar replurk unreplurk' -- "$cur" ) )
+        COMPREPLY=( $( compgen -W 'add get resp_add resp_get resp_del get_unread_count get_unread del edit mute unmute favor unfavor mar replurk unreplurk get_user_pub' -- "$cur" ) )
     fi
     if [ $COMP_CWORD -eq 2 -a "${COMP_WORDS[1]}" == "add" -o $COMP_CWORD -eq 3 -a "${COMP_WORDS[1]}" == "resp_add" ]; then
         COMPREPLY=( $( compgen -W 'loves likes shares gives hates wants has will asks wishes was feels thinks says is : freestyle hopes needs wonders' -- "$cur" ) )
