@@ -28,6 +28,20 @@ This is a plurk Command Line tool. Let's you need less to open the browser to pl
 
 ## Insatll
 
+### In Ubuntu
+
+[Download](https://github.com/downloads/renn999/Plurk-CLI/plurk-cli_0.1-1_all.deb) the deb file. And double click to install. Or
+```
+dpkg -i plurk-cli_0.1-1_all.deb
+```
+
+### Other Linux
+
+Git clone from Github
+```
+git clone git://github.com/renn999/Plurk-CLI.git
+```
+
 modify the head of `makefile` to relative your distribution of Linux.
 ```
 PERFIX=/usr
@@ -62,5 +76,5 @@ plurk add [qualifier] [content] [-p -nc -fc]
       unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
       get_user_pub [user_id]
 
-readmore on doc.
+Readmore in `doc/doc.txt` or `man plurk`.
 ```
