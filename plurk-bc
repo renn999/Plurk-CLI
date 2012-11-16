@@ -13,6 +13,8 @@ _plurk()
     fi
     if [ $COMP_CWORD -eq 2 -a "${COMP_WORDS[1]}" == "add" -o $COMP_CWORD -eq 3 -a "${COMP_WORDS[1]}" == "resp_add" ]; then
         COMPREPLY=( $( compgen -W 'loves likes shares gives hates wants has will asks wishes was feels thinks says is : freestyle hopes needs wonders' -- "$cur" ) )
+    elif [ $COMP_CWORD -eq 2 -a "${COMP_WORDS[1]}" == "get" ]; then
+            COMPREPLY=( $( compgen -W '--offset --filter' -- "$cur" ) )
     fi
 
 } &&
