@@ -245,10 +245,11 @@ def out_put_plurk(i,p):
   plurk_uname = user_coloer(p[str(i['owner_id'])])
   if i.has_key('replurker_id') and i['replurker_id']:
     replurk_uname = user_coloer(p[str(i['replurker_id'])])
-    print '%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
+    ma = u'%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
   else:
-    print plurk_uname+' ' + qu
-  print i['content_raw']
+    ma = u'%s %s' % (plurk_uname, qu)
+  print ma.encode("utf-8")
+  print i['content_raw'].encode("utf-8")
   l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
   k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
   m = 'plurk_id: '+str(i['plurk_id'])
@@ -274,7 +275,8 @@ def out_put_resp(p):
       i['qualifier_translated'] = None
     qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
-    print '%s %s %s' % (plurk_uname, qu, i['content_raw'])
+    m =  u'%s %s %s' % (plurk_uname, qu, i['content_raw'])
+    print m.encode("utf-8")
     j = 'respond_id: '+str(i['id'])
     print ' '*(int(columns)-len(j)) + j
     print '-'*int(columns)
