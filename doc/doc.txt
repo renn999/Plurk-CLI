@@ -32,7 +32,7 @@ SUBCOMMEND
     
     get:      Get plurk From timeline.
     cmd:      plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
-    --offset      get the plurks OLDER then offset time. Here is using the UTC time.
+    --offset      get the plurks OLDER then offset time. Here is using the UTC time. Formation: YYYY-mm-ddTHH-MM-SS.
     --filter      Can be only_user, only_responded, only_private or only_favorite.
     
     resp_add: Add respons to plurk

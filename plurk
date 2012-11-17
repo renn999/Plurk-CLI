@@ -12,7 +12,7 @@ CONFIG_PATH = os.path.join(USER_HOME,'.plurk-cli')
 if not os.path.isdir(CONFIG_PATH):
   try:
     os.mkdir(CONFIG_PATH)
-  except:
+  except: 
     print 'Make configure path %s Faild' % CONFIG_PATH
     exit()
 LAST_TIME_READ = os.path.join(CONFIG_PATH,'last_time_read')
@@ -39,7 +39,6 @@ else:
     exit()
 
 
-
 def b36en(num):
   alphabet = [ chr(i) for i in ( range(48,58) + range(97,123) ) ]
   if (num == 0):
@@ -52,6 +51,7 @@ def b36en(num):
     arr.append(alphabet[rem])
   arr.reverse()
   return ''.join(arr)
+
 
 def main(argv):
   api = {
@@ -166,10 +166,33 @@ def main(argv):
         data['offset'] = offset
     p = plurk.callAPI('/APP/Timeline/getPublicPlurks',data)
     out_put(p)
+  elif argv[0] == 'get_user_info':
+    if argv[1:]:
+      data={'user_id': argv[1] if argv[1][0]!='@' else argv[1][1:]}
+      p = plurk.callAPI('/APP/Timeline/getPublicPlurks',data)
+    else:
+      p = plurk.callAPI('/APP/Profile/getOwnProfile')
+    print p
+  elif argv[0] == 'cliquelist':
+    p = plurk.callAPI('/APP/Cliques/getCliques')
+    for i in  p:
+      print i
+  elif argv[0] == 'cliqueuser' and len(argv) == 2 :
+    data = {'clique_name': argv[1] }
+    p = plurk.callAPI('/APP/Cliques/getClique',data)
+    print p
+  elif argv[0] == 'cliquecreate' and len(argv) > 1 :
+    pass
+  elif argv[0] == 'cliquemv' and len(argv) == 3 :
+    pass
+  elif argv[0] == 'cliqueadd' and len(argv) > 2 :
+    pass
+  elif argv[0] == 'cliquerm' and len(argv) > 1 :
+    pass
   else:
     print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
-          get [--offset [time]]
+          get [--offset [time Type: YYYY-mm-ddTHH:MM:SS]] [--filter [only_user only_responded only_private only_favorite]]
           resp_add [plurk_id] [qualifier] [content]
           resp_get [plurk_id]
           resp_del [plurk_id] [resp_id]
@@ -185,6 +208,7 @@ def main(argv):
           replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           get_user_pub [user_id]
+          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm
 
 * readmore on doc."""
 
@@ -238,6 +262,7 @@ def out_put(p):
     print 'Offset From: %s End: %s' % (time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')),time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')))
   return {'last_time':last_time,'first_time':first_time,'plurk_ids':plurk_ids}
 
+
 def out_put_plurk(i,p):
   if not i.has_key('qualifier_translated'):
     i['qualifier_translated'] = None
@@ -249,7 +274,7 @@ def out_put_plurk(i,p):
   else:
     ma = u'%s %s' % (plurk_uname, qu)
   print ma.encode("utf-8")
-  print i['content_raw'].encode("utf-8")
+  print content_formater(i['content_raw']).encode("utf-8")
   l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
   k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
   m = 'plurk_id: '+str(i['plurk_id'])
@@ -275,12 +300,39 @@ def out_put_resp(p):
       i['qualifier_translated'] = None
     qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
-    m =  u'%s %s %s' % (plurk_uname, qu, i['content_raw'])
+    content = content_formater(i['content_raw'])
+    m =  u'%s %s %s' % (plurk_uname, qu, content)
     print m.encode("utf-8")
     j = 'respond_id: '+str(i['id'])
     print ' '*(int(columns)-len(j)) + j
     print '-'*int(columns)
   print 'Total: %d response(s)' % len(p['responses'])
+
+
+def content_formater(text):
+  l = text.split('**')
+  k = len(l)
+  f_text = []
+  for i,j in enumerate(l):
+    if i % 2 :
+      if i < (k-1):
+        f_text = f_text + [ colored(j,attrs=['bold']) ]
+      else:
+        f_text = f_text + [ '**' + j ]
+    else:
+      f_text = f_text + [ j ]
+  l = ''.join(f_text).split('__')
+  k = len(l)
+  g_text = []
+  for i,j in enumerate(l):
+    if i % 2 :
+      if i < (k-1):
+        g_text = g_text + [ colored(j,attrs=['underline']) ]
+      else:
+        g_text = g_text + [ '__' + j ]
+    else:
+      g_text = g_text + [ j ]
+  return ''.join(g_text)
 
 def user_coloer(plurk_user):
   plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
@@ -296,6 +348,7 @@ def user_coloer(plurk_user):
   else:
     plurk_uname = colored(plurk_uname, attrs=['bold'])
   return plurk_uname
+
 
 def qualifier_color(qu,qu_tr=None):
   if qu in ['loves', 'likes', 'shares', 'gives', 'says', 'is']:
@@ -313,6 +366,7 @@ def qualifier_color(qu,qu_tr=None):
   if not qu_tr:
     qu_tr = qu
   return colored(qu_tr, 'white', bg)
+
 
 def add_resp(argv):
   data=dict()
