@@ -35,7 +35,7 @@ else:
     i = json.loads(f.read())
     plurk.authorize(i['oauth_token'],i['oauth_token_secret'])
   except:
-    print 'there is something wrong when reading the config to %s.' % authorize_file
+    print 'there is something wrong when reading the config to %s. Please remove it, and Try again.' % authorize_file
     exit()
 
 
@@ -118,16 +118,16 @@ def main(argv):
           (p['new'],p['all'],p['my'],p['private'],p['responded'],p['favorite'])
   elif argv[0] == 'get_unread':
     data = {'limit': LIMIT}
-    if '--new' in argv:
+    if set(['--new','-n']) & set(argv):
       get_last_timeLine_read()
     else:
-      if '--my' in argv:
+      if set(['--my','-m']) & set(argv):
         data['filter'] = 'my'
-      elif '--responded' in argv:
+      elif set(['--responded','-r']) & set(argv):
         data['filter'] = 'responded'
-      elif '--private' in argv:
+      elif set(['--private','-p']) & set(argv):
         data['filter'] = 'private'
-      elif '--favorite' in argv:
+      elif set(['--favorite','-f']) & set(argv):
         data['filter'] = 'favorite'
       p = plurk.callAPI('/APP/Timeline/getUnreadPlurks',data)
       rp = out_put(p)
@@ -204,11 +204,21 @@ def main(argv):
       p = plurk.callAPI('/APP/Cliques/remove',data)
       print p
   elif argv[0] == 'blocklist':
-    pass
-  elif argv[0] == 'block':
-    pass
-  elif argv[0] == 'unblock':
-    pass
+    try:
+      data = {'offset': (int(argv[1])-1)*10 }
+    except:
+      data = {}
+    p = plurk.callAPI('/APP/Blocks/get',data)
+  elif argv[0] == 'block' and len(argv) > 2:
+    for i in argv[1:]:
+      data = {'user_id':i }
+      p = plurk.callAPI('/APP/Blocks/block',data)
+      print p
+  elif argv[0] == 'unblock' and len(argv) > 2:
+    for i in argv[1:]:
+      data = {'user_id':i }
+      p = plurk.callAPI('/APP/Blocks/unblock',data)
+      print p
   else:
     print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
@@ -217,7 +227,7 @@ def main(argv):
           resp_get [plurk_id]
           resp_del [plurk_id] [resp_id]
           count_unread
-          get_unread [--new --my --responded --private --favorite] [--withmar]
+          get_unread [-n,--new -m,--my -r,--responded -p,--private -f,--favorite] [--withmar]
           del [plurk_id]
           edit [plurk_id] [content]
           mute [plurk_id#1 plurk_id#2 plurk_id#3 ...]

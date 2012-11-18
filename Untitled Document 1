@@ -1,0 +1,43 @@
+Users
+/APP/Users/currUser
+/APP/Users/update
+/APP/Users/updatePicture
+/APP/Users/getKarmaStats
+Real time notifications
+/APP/Realtime/getUserChannel
+Profile
+/APP/Profile/getOwnProfile
+/APP/Profile/getPublicProfile
+Friends and fans
+/APP/FriendsFans/getFriendsByOffset
+/APP/FriendsFans/getFansByOffset
+/APP/FriendsFans/getFollowingByOffset
+/APP/FriendsFans/becomeFriend
+/APP/FriendsFans/removeAsFriend
+/APP/FriendsFans/becomeFan
+/APP/FriendsFans/setFollowing
+/APP/FriendsFans/getCompletion
+Alerts
+General data structures
+/APP/Alerts/getActive
+/APP/Alerts/getHistory
+/APP/Alerts/addAsFan
+/APP/Alerts/addAllAsFan
+/APP/Alerts/addAllAsFriends
+/APP/Alerts/addAsFriend
+/APP/Alerts/denyFriendship
+/APP/Alerts/removeNotification
+Search
+/APP/PlurkSearch/search
+/APP/UserSearch/search
+Emoticons
+/APP/Emoticons/get
+PlurkTop
+/APP/PlurkTop/getCollections
+/APP/PlurkTop/getTopics
+/APP/PlurkTop/getPlurks
+OAuth Utilities
+/APP/checkToken
+/APP/expireToken
+/APP/checkTime
+/APP/echo
