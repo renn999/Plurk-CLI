@@ -180,14 +180,38 @@ def main(argv):
   elif argv[0] == 'cliqueuser' and len(argv) == 2 :
     data = {'clique_name': argv[1] }
     p = plurk.callAPI('/APP/Cliques/getClique',data)
-    print p
+    for i in p:
+      m = u'%s (@%s)' % (i['display_name'],i['nick_name'])
+      print m.encode('UTF-8')
   elif argv[0] == 'cliquecreate' and len(argv) > 1 :
-    pass
+    data = {'clique_name': argv[1] }
+    p = plurk.callAPI('/APP/Cliques/createClique',data)
+    if p['success_text'] == 'OK':
+      print 'OK!'
+    else:
+      print 'Error!'
   elif argv[0] == 'cliquemv' and len(argv) == 3 :
-    pass
+    data = {'clique_name': argv[1], 'new_name':argv[2] }
+    p = plurk.callAPI('/APP/Cliques/renameClique',data)
+    if p['success_text'] == 'OK':
+      print 'OK!'
+    else:
+      print 'Error!'
   elif argv[0] == 'cliqueadd' and len(argv) > 2 :
+    for i in argv[2:]:
+      data = {'clique_name': argv[1], 'user_id':i }
+      p = plurk.callAPI('/APP/Cliques/add',data)
+      print p
+  elif argv[0] == 'cliquerm' and len(argv) > 2 :
+    for i in argv[2:]
+      data = {'clique_name': argv[1], 'user_id':i }
+      p = plurk.callAPI('/APP/Cliques/remove',data)
+      print p
+  elif argv[0] == 'blocklist':
     pass
-  elif argv[0] == 'cliquerm' and len(argv) > 1 :
+  elif argv[0] == 'block':
+    pass
+  elif argv[0] == 'unblock':
     pass
   else:
     print """USAGE:    
@@ -208,7 +232,7 @@ def main(argv):
           replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           get_user_pub [user_id]
-          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm
+          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock
 
 * readmore on doc."""
 
@@ -309,7 +333,7 @@ def out_put_resp(p):
   print 'Total: %d response(s)' % len(p['responses'])
 
 
-def content_formater(text):
+def content_formater(text): ##need modify, too dirty.
   l = text.split('**')
   k = len(l)
   f_text = []
@@ -332,6 +356,7 @@ def content_formater(text):
         g_text = g_text + [ '__' + j ]
     else:
       g_text = g_text + [ j ]
+  #print colored('test','grey','on_grey',attrs=['dark','reverse'])
   return ''.join(g_text)
 
 def user_coloer(plurk_user):
