@@ -111,11 +111,7 @@ def main(argv):
       print 'Success!'
   elif argv[0] == 'count_unread':
     p = plurk.callAPI('/APP/Polling/getUnreadCount')
-    f = open(LAST_TIME_READ,'r+')
-    last_time = f.read()
-    f.close()
-    a = time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')
-    data={'offset':time.strftime('%Y-%m-%dT%H:%M:%S',a)}
+    data={'offset':get_last_unread_time(),'limit':20}
     np = plurk.callAPI('/APP/Polling/getPlurks',data)
     p['new'] = len(np['plurks'])
     print "New: %d All: %d My: %d Private: %d Responded: %d Favorite: %d" % \
@@ -203,7 +199,7 @@ def main(argv):
       p = plurk.callAPI('/APP/Cliques/add',data)
       print p
   elif argv[0] == 'cliquerm' and len(argv) > 2 :
-    for i in argv[2:]
+    for i in argv[2:]:
       data = {'clique_name': argv[1], 'user_id':i }
       p = plurk.callAPI('/APP/Cliques/remove',data)
       print p
@@ -252,16 +248,27 @@ def add_plurk(argv):
     print p['error_text']
 
 
-def get_last_timeLine_read():
+def get_last_unread_time():
+  if not os.path.isfile(LAST_TIME_READ):
+    f = open(LAST_TIME_READ,'w+')
+    f.close()
   f = open(LAST_TIME_READ,'r+')
   last_time = f.read()
   f.close()
+  if not last_time:
+    last_time = time.strftime('%Y-%m-%dT%H:%M:%S',time.gmtime())
   try:
     a = time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')
   except:
-    last_time = time.strftime('%a, %d %b %Y %H:%M:%S %Z')
-    a = time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')
-  data={'offset':time.strftime('%Y-%m-%dT%H:%M:%S',a),'limit':LIMIT+10}
+    pass
+  else:
+    last_time = time.strftime('%Y-%m-%dT%H:%M:%S',a)
+  return last_time
+
+
+def get_last_timeLine_read():
+  last_time = get_last_unread_time()
+  data={'offset':last_time,'limit':LIMIT}
   p = plurk.callAPI('/APP/Polling/getPlurks',data)
   rp = out_put(p)
   last_time = rp['last_time'] if rp['last_time'] else last_time
@@ -283,7 +290,11 @@ def out_put(p):
     last_time = i['posted']
     plurk_ids = plurk_ids + [i['plurk_id']]
   if first_time != None and last_time != None:
-    print 'Offset From: %s End: %s' % (time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')),time.strftime('%Y-%m-%dT%H:%M:%S',time.strptime(last_time,'%a, %d %b %Y %H:%M:%S %Z')))
+    first_time = time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')
+    last_time  = time.strptime(last_time ,'%a, %d %b %Y %H:%M:%S %Z')
+    first_time = time.strftime('%Y-%m-%dT%H:%M:%S',first_time)
+    last_time  = time.strftime('%Y-%m-%dT%H:%M:%S',last_time)
+    print 'Offset From: %s End: %s' % (first_time,last_time)
   return {'last_time':last_time,'first_time':first_time,'plurk_ids':plurk_ids}
 
 
