@@ -2,7 +2,7 @@ NAME
   plurk - This is a plurk Command Line tool. Let's you need less to open the browser to plurk.
 
 SYNOPSIS
-  plurk add [qualifier] [content] [-p -nc -fc]
+  plurk add [qualifier] [content] [[-p plurk_id @plurk_nick_name :plurk_cliques ] -pf -nc -fc]
   plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
   plurk resp_add [plurk_id] [qualifier] [content]
   plurk resp_get [plurk_id]
@@ -19,6 +19,7 @@ SYNOPSIS
   plurk replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
   plurk unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
   plurk get_user_pub [user_id]
+  get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock
 
 SUBCOMMEND
   
@@ -26,7 +27,13 @@ SUBCOMMEND
     cmd:      plurk add [qualifier] [content] [-p -nc -fc]
     [qualifier]   The Plurk's qualifier, must be in English. like: says, ...etc.
     [content]     The Plurk's text.
-    -p            The Plurk is privatley posted to the poster's friends.
+    -p            The Plurk is privatley posted to the poster's friends or cliques.
+                  plurk_id          a int of plurk_id. If you put 0, this plurk is private for all of your friends. 
+                                      If nothing left, this plurk is for self.
+                  @plurk_nick_name  plurk user nick name
+                  :plurk_clique     plurk users in cliques
+
+    -pf           It like '-p 0'
     -nc           The responses are disabled for this plurk.
     -fc           The only friends can respond to this plurk. If -nc -fc are using together, -nc will be first choice.
     
