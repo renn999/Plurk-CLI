@@ -175,7 +175,7 @@ def main(argv):
       print i
   elif argv[0] == 'cliqueuser' and len(argv) == 2 :
     data = {'clique_name': argv[1] }
-    p = plurk.callAPI('/APP/Cliques/getClique',data)
+    p = cli_u(data)
     for i in p:
       m = u'%s (@%s)' % (i['display_name'],i['nick_name'])
       print m.encode('UTF-8')
@@ -242,10 +242,38 @@ def main(argv):
 
 * readmore on doc."""
 
+def cli_u(data):
+  p = plurk.callAPI('/APP/Cliques/getClique',data)
+  u = dict()
+  for i in p:
+    u[int(i['id'])] = {'nick_name':i['nick_name'], 'display_name': i['display_name'] if i.has_key('display_name') else None }
+  return u
+
 
 def add_plurk(argv):
   data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}
   if '-p' in argv:
+    p=None
+    data['limited_to'] = []
+    for i in argv[argv.index('-p')+1:]:
+      if i[0]=='-':
+        break
+      elif i[0] == '@':
+        if not p:
+          p = plurk.callAPI('/APP/FriendsFans/getCompletion')
+        data['limited_to'] = data['limited_to'] + [ int(j) for j, k in p.iteritems() if k['nick_name'] == i[1:] ]
+      elif i[0] == ':' :
+        cli = {'clique_name': i[1:]}
+        cu = cli_u(cli)
+        data['limited_to'] = data['limited_to'] + cu.keys()
+      else:
+        try:
+          int(i)
+        except:
+          pass
+        else:
+          data['limited_to'] = data['limited_to'] + [int(i)]
+  elif '-pf' in argv:
     data['limited_to'] = [0]
   if '-nc' in argv:
     data['no_comments'] = 1
