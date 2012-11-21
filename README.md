@@ -53,6 +53,8 @@ Then
 $ sudo make install
 #uninstall
 $ sudo make uninstall
+#dep. If you want to modify and test, this will create a link.
+$ sudo make dep
 ```
 
 ## Usage

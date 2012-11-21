@@ -150,7 +150,7 @@ def main(argv):
         print '%s %s error. %s' % (i, argv[0], j['error'])
   elif argv[0] == 'get_user_pub':
     data = dict()
-    data['user_id'] = argv[1] if argv[1][0] != '@' else argv[1][1:]
+    data['user_id'] = int(argv[1]) if argv[1][0] != '@' else argv[1][1:]
     data['limit']   = LIMIT
     if '--offset' in argv:
       try:
@@ -164,8 +164,8 @@ def main(argv):
     out_put(p)
   elif argv[0] == 'get_user_info':
     if argv[1:]:
-      data={'user_id': argv[1] if argv[1][0]!='@' else argv[1][1:]}
-      p = plurk.callAPI('/APP/Timeline/getPublicPlurks',data)
+      data={'user_id': int(argv[1]) if argv[1][0]!='@' else argv[1][1:]}
+      p = plurk.callAPI('/APP/Profile/getPublicProfile',data)
     else:
       p = plurk.callAPI('/APP/Profile/getOwnProfile')
     print p
@@ -176,8 +176,9 @@ def main(argv):
   elif argv[0] == 'cliqueuser' and len(argv) == 2 :
     data = {'clique_name': argv[1] }
     p = cli_u(data)
-    for i in p:
-      m = u'%s (@%s)' % (i['display_name'],i['nick_name'])
+    for i in p['id']:
+      j = p['id'].index(i)
+      m = u'%s (@%s)' % (p['display_name'][j],p['nick_name'][j])
       print m.encode('UTF-8')
   elif argv[0] == 'cliquecreate' and len(argv) > 1 :
     data = {'clique_name': argv[1] }
@@ -244,9 +245,11 @@ def main(argv):
 
 def cli_u(data):
   p = plurk.callAPI('/APP/Cliques/getClique',data)
-  u = dict()
+  u = {'id':[],'display_name':[],'nick_name':[]}
   for i in p:
-    u[int(i['id'])] = {'nick_name':i['nick_name'], 'display_name': i['display_name'] if i.has_key('display_name') else None }
+    u['id'].append(int(i['id']))
+    u['nick_name'].append(i['nick_name'])
+    u['display_name'].append(i['display_name'] if i.has_key('display_name') else i['nick_name'])
   return u
 
 
@@ -261,18 +264,22 @@ def add_plurk(argv):
       elif i[0] == '@':
         if not p:
           p = plurk.callAPI('/APP/FriendsFans/getCompletion')
-        data['limited_to'] = data['limited_to'] + [ int(j) for j, k in p.iteritems() if k['nick_name'] == i[1:] ]
+        j = [int(j) for j, k in p.iteritems() if k['nick_name'] == i[1:]]
+        if not j:
+          q = plurk.callAPI('/APP/Profile/getPublicProfile',{'user_id':i[1:]})
+          j = [q['user_info']['id']]
+        data['limited_to'].extend(j)
       elif i[0] == ':' :
         cli = {'clique_name': i[1:]}
         cu = cli_u(cli)
-        data['limited_to'] = data['limited_to'] + cu.keys()
+        data['limited_to'].extend(cu['id'])
       else:
         try:
           int(i)
         except:
           pass
         else:
-          data['limited_to'] = data['limited_to'] + [int(i)]
+          data['limited_to'].append(int(i))
   elif '-pf' in argv:
     data['limited_to'] = [0]
   if '-nc' in argv:
