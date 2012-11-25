@@ -94,7 +94,7 @@ def main(argv):
       p = plurk.callAPI('/APP/Timeline/plurkEdit',data)
     else:
       print "there is something wrong in argvalues."
-    if p.has_key('error_text'):
+    if 'error_text' in p:
       print p['error_text']
     else:
       print 'OK!'
@@ -105,7 +105,7 @@ def main(argv):
   elif argv[0] == 'resp_del':
     data = {'plurk_id': int(argv[1]),'response_id':int(argv[2])}
     p = plurk.callAPI('/APP/Responses/responseDelete',data)
-    if p.has_key('error_text'):
+    if 'error_text' in p:
       print 'ERROR! %s.' % p['error_text']
     else:
       print 'Success!'
@@ -220,6 +220,8 @@ def main(argv):
       data = {'user_id':i }
       p = plurk.callAPI('/APP/Blocks/unblock',data)
       print p
+  elif argv[0] == 'alert':
+    alert_group(argv[1:])
   else:
     print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
@@ -249,9 +251,28 @@ def cli_u(data):
   for i in p:
     u['id'].append(int(i['id']))
     u['nick_name'].append(i['nick_name'])
-    u['display_name'].append(i['display_name'] if i.has_key('display_name') else i['nick_name'])
+    u['display_name'].append(i['display_name'] if 'display_name' in i else i['nick_name'])
   return u
 
+def alert_group(argv):
+  if not len(argv) < 1:
+    if argv[0] == 'history':
+      p=plurk.callAPI('/APP/Alerts/getHistory')
+      for i in p:
+        n = i[i['type']]['nick_name']
+        m = u'%s become %s' % (n, i['type'].replace('_',' '))
+        print m.encode('UTF-8')
+  else:
+    p=plurk.callAPI('/APP/Alerts/getActive')
+    print p
+'''
+/APP/Alerts/addAsFan
+/APP/Alerts/addAllAsFan
+/APP/Alerts/addAllAsFriends
+/APP/Alerts/addAsFriend
+/APP/Alerts/denyFriendship
+/APP/Alerts/removeNotification
+'''
 
 def add_plurk(argv):
   data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}
@@ -287,7 +308,7 @@ def add_plurk(argv):
   elif '-fc' in argv:
     data['no_comments'] = 2
   p = plurk.callAPI('/APP/Timeline/plurkAdd',data)
-  if not p.has_key('error_text'):
+  if not 'error_text' in p:
     print 'url: http://www.plurk.com/p/'+b36en(p['plurk_id']) + '\nplurk_id: '+ str(p['plurk_id'])
   else:
     print p['error_text']
@@ -344,11 +365,11 @@ def out_put(p):
 
 
 def out_put_plurk(i,p):
-  if not i.has_key('qualifier_translated'):
+  if not 'qualifier_translated' in i:
     i['qualifier_translated'] = None
   qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
   plurk_uname = user_coloer(p[str(i['owner_id'])])
-  if i.has_key('replurker_id') and i['replurker_id']:
+  if 'replurker_id' in i and i['replurker_id']:
     replurk_uname = user_coloer(p[str(i['replurker_id'])])
     ma = u'%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
   else:
@@ -359,10 +380,10 @@ def out_put_plurk(i,p):
   k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
   m = 'plurk_id: '+str(i['plurk_id'])
   j = {'c':{},'uc':{}}
-  if i.has_key('favorite') and i['favorite']:
+  if 'favorite' in i and i['favorite']:
     j['uc']['f'] = ' F '
     j['c']['f']  = colored(j['uc']['f'],'grey','on_cyan', attrs=['dark'])
-  if i.has_key('replurked') and i['replurked']:
+  if 'replurked' in i and i['replurked']:
     j['uc']['r'] = ' R '
     j['c']['r']  = colored(j['uc']['r'],'grey','on_green', attrs=['dark'])
   if (int(i['plurk_type']) | 2) is 3:
@@ -376,7 +397,7 @@ def out_put_plurk(i,p):
 
 def out_put_resp(p):
   for i in p['responses']:
-    if not i.has_key('qualifier_translated'):
+    if not 'qualifier_translated' in i:
       i['qualifier_translated'] = None
     qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
     plurk_uname = user_coloer(p['friends'][str(i['user_id'])])
@@ -416,9 +437,9 @@ def content_formater(text): ##need modify, too dirty.
   return ''.join(g_text)
 
 def user_coloer(plurk_user):
-  plurk_uname = plurk_user['display_name'] if plurk_user.has_key('display_name') else plurk_user['nick_name']
+  plurk_uname = plurk_user['display_name'] if 'display_name' in plurk_user else plurk_user['nick_name']
   plurk_uname = plurk_uname + '(@%s)' % plurk_user['nick_name']
-  if not plurk_user.has_key('name_color'):
+  if not 'name_color' in plurk_user:
     plurk_user['name_color'] = None
   if plurk_user['name_color'] == '0A9C17':
     plurk_uname = colored(plurk_uname, 'green', attrs=['bold'])

@@ -17,16 +17,6 @@ Friends and fans
 /APP/FriendsFans/becomeFan
 /APP/FriendsFans/setFollowing
 /APP/FriendsFans/getCompletion
-Alerts
-General data structures
-/APP/Alerts/getActive
-/APP/Alerts/getHistory
-/APP/Alerts/addAsFan
-/APP/Alerts/addAllAsFan
-/APP/Alerts/addAllAsFriends
-/APP/Alerts/addAsFriend
-/APP/Alerts/denyFriendship
-/APP/Alerts/removeNotification
 Search
 /APP/PlurkSearch/search
 /APP/UserSearch/search
