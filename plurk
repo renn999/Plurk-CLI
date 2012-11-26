@@ -98,17 +98,8 @@ def main(argv):
       print p['error_text']
     else:
       print 'OK!'
-  elif argv[0] == 'resp_add':
-    add_resp(argv[1:])
-  elif argv[0] == 'resp_get':
-    get_resp(argv[1:])
-  elif argv[0] == 'resp_del':
-    data = {'plurk_id': int(argv[1]),'response_id':int(argv[2])}
-    p = plurk.callAPI('/APP/Responses/responseDelete',data)
-    if 'error_text' in p:
-      print 'ERROR! %s.' % p['error_text']
-    else:
-      print 'Success!'
+  elif argv[0] == 'resp':
+    resp_group(argv[1:])
   elif argv[0] == 'count_unread':
     p = plurk.callAPI('/APP/Polling/getUnreadCount')
     data={'offset':get_last_unread_time(),'limit':20}
@@ -226,9 +217,9 @@ def main(argv):
     print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
           get [--offset [time Type: YYYY-mm-ddTHH:MM:SS]] [--filter [only_user only_responded only_private only_favorite]]
-          resp_add [plurk_id] [qualifier] [content]
-          resp_get [plurk_id]
-          resp_del [plurk_id] [resp_id]
+          resp add [plurk_id] [qualifier] [content]
+          resp get [plurk_id]
+          resp del [plurk_id] [resp_id]
           count_unread
           get_unread [-n,--new -m,--my -r,--responded -p,--private -f,--favorite] [--withmar]
           del [plurk_id]
@@ -244,6 +235,21 @@ def main(argv):
           get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock
 
 * readmore on doc."""
+
+
+def resp_group(argv):
+  elif argv[0] == 'add':
+    add_resp(argv[1:])
+  elif argv[0] == 'get':
+    get_resp(argv[1:])
+  elif argv[0] == 'del':
+    data = {'plurk_id': int(argv[1]),'response_id':int(argv[2])}
+    p = plurk.callAPI('/APP/Responses/responseDelete',data)
+    if 'error_text' in p:
+      print 'ERROR! %s.' % p['error_text']
+    else:
+      print 'Success!'
+
 
 def cli_u(data):
   p = plurk.callAPI('/APP/Cliques/getClique',data)

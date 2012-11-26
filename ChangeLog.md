@@ -10,3 +10,7 @@
   * plurk syntax support.
   * cliqus, block, function supoort.
   * `plurk add` more choise to private plurk.
+
+* Modify
+  
+  * plurk respond commed split to subcommend

@@ -4,9 +4,9 @@ NAME
 SYNOPSIS
   plurk add [qualifier] [content] [[-p plurk_id @plurk_nick_name :plurk_cliques ] -pf -nc -fc]
   plurk get [--offset [time]] [--filter [only_user only_responded only_private only_favorite]]
-  plurk resp_add [plurk_id] [qualifier] [content]
-  plurk resp_get [plurk_id]
-  plurk resp_del [plurk_id] [resp_id]
+  plurk resp add [plurk_id] [qualifier] [content]
+  plurk resp get [plurk_id]
+  plurk resp del [plurk_id] [resp_id]
   plurk count_unread
   plurk get_unread [--new --my --responded --private --favorite] [--withmar]
   plurk del [plurk_id]
@@ -42,17 +42,17 @@ SUBCOMMEND
     --offset      get the plurks OLDER then offset time. Here is using the UTC time. Formation: YYYY-mm-ddTHH-MM-SS.
     --filter      Can be only_user, only_responded, only_private or only_favorite.
     
-    resp_add: Add respons to plurk
+    resp add: Add respons to plurk
     cmd:      plurk resp_add [plurk_id] [qualifier] [content]
     [plurk_id]    The plurk id you want to respond.
     [qualifier]   Same as add.
     [content]     Same as add.
 
-    resp_get: Get plurk responses.
+    resp get: Get plurk responses.
     cmd:      plurk resp_get [plurk_id]
     [plurk_id]    The plurk id you want to read plurk respond.
 
-    resp_del: Delete response.
+    resp del: Delete response.
     cmd:      plurk resp_del [plurk_id] [resp_id]
     [plurk_id]    The plurk id you respond to.
     [resp_id]     The response id you want to delete.
