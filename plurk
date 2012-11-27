@@ -81,9 +81,9 @@ def main(argv):
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
   elif argv[0] in ['del', 'edit']:
-    try:
+    if argv[1].isdigit():
       plurk_id = int(argv[1])
-    except:
+    else:
       print 'Please input Plurk id in integer not Base36.'
       exit()
     data = {'plurk_id':plurk_id}
@@ -125,20 +125,28 @@ def main(argv):
       if rp['plurk_ids'] and '--withmar' in argv:
         plurk.callAPI('/APP/Timeline/markAsRead',{'ids':rp['plurk_ids'],'note_position':'true'})
   elif argv[0] in list(api.keys()):
-    data = {'ids':[int(i) for i in argv[1:]]}
-    p = plurk.callAPI(api[argv[0]],data)
-    if p['success_text'] != "ok":
-      print "It's something wrong"
+    data = {'ids':[int(i) for i in argv[1:] if i.isdigit()]}
+    if not data['ids']:
+      print 'Please input Plurk id in integer not Base36.'
+      exit()
     else:
-      print "OK!"
-  elif argv[0] in ['replurk','unreplurk']:
-    data = {'ids':[int(i) for i in argv[1:]]}
-    p = plurk.callAPI('/APP/Timeline/'+argv[0],data)
-    for i, j in p['results'].items():
-      if j['success']:
-        print '%s %s success.' % (i, argv[0])
+      p = plurk.callAPI(api[argv[0]],data)
+      if p['success_text'] != "ok":
+        print "It's something wrong"
       else:
-        print '%s %s error. %s' % (i, argv[0], j['error'])
+        print "OK!"
+  elif argv[0] in ['replurk','unreplurk']:
+    data = {'ids':[int(i) for i in argv[1:] if i.isdigit()]}
+    if not data['ids']:
+      print 'Please input Plurk id in integer not Base36.'
+      exit()
+    else:
+      p = plurk.callAPI('/APP/Timeline/'+argv[0],data)
+      for i, j in p['results'].items():
+        if j['success']:
+          print '%s %s success.' % (i, argv[0])
+        else:
+          print '%s %s error. %s' % (i, argv[0], j['error'])
   elif argv[0] == 'get_user_pub':
     data = dict()
     data['user_id'] = int(argv[1]) if argv[1][0] != '@' else argv[1][1:]
@@ -232,13 +240,13 @@ def main(argv):
           replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           get_user_pub [user_id]
-          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock
+          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock alert
 
 * readmore on doc."""
 
 
 def resp_group(argv):
-  elif argv[0] == 'add':
+  if argv[0] == 'add':
     add_resp(argv[1:])
   elif argv[0] == 'get':
     get_resp(argv[1:])
@@ -261,24 +269,58 @@ def cli_u(data):
   return u
 
 def alert_group(argv):
+  p=plurk.callAPI('/APP/Alerts/getActive')
+  api_mg = {
+        'afn':{
+                'url':'/APP/Alerts/addAsFan',
+                'm': u'%s add as fan'
+              },
+        'afd':{
+                'url':'/APP/Alerts/addAsFriend',
+                'm': u'%s add as friend'
+              },
+        'dfs':{
+                'url':'/APP/Alerts/denyFriendship',
+                'm': u'deny %s as friendship'
+              },
+        'rnf':{
+                'url':'/APP/Alerts/removeNotification',
+                'm': u'remove %s Notification'
+              }
+      }
   if not len(argv) < 1:
-    if argv[0] == 'history':
+    k = argv.pop(0)
+    if k == 'history':
       p=plurk.callAPI('/APP/Alerts/getHistory')
       for i in p:
         n = i[i['type']]['nick_name']
         m = u'%s become %s' % (n, i['type'].replace('_',' '))
         print m.encode('UTF-8')
+    elif k in api_mg and len(argv):
+      for j in argv:
+        data = {'user_id': i['from_user']['id'] for i in p if i['from_user']['nick_name']==j } 
+        p=plurk.callAPI(api_mg[k]['url'],data)
+        if 'success_text' in p:
+          m = api_mg[k]['m'] % j
+          print m.encode('UTF-8')
+        else:
+          print 'Something Wrong!'
+    elif k in ['allfn','allfd']:
+      l = '/APP/Alerts/addAllAsFan' if k == 'allfn' else '/APP/Alerts/addAllAsFriends'
+      p = plurk.callAPI(l)
+      if 'success_text' in p:
+        print 'All become %s' % 'Fan' if k=='allfn' else 'Friend'
+      else:
+        print 'Something Wrong!'
   else:
-    p=plurk.callAPI('/APP/Alerts/getActive')
-    print p
-'''
-/APP/Alerts/addAsFan
-/APP/Alerts/addAllAsFan
-/APP/Alerts/addAllAsFriends
-/APP/Alerts/addAsFriend
-/APP/Alerts/denyFriendship
-/APP/Alerts/removeNotification
-'''
+    if p:
+      for i in p:
+        if i['type'] == 'friendship_request':
+          m = u'%s (@%s) send a friendship request.' % (i['from_user']['full_name'],i['from_user']['nick_name'])
+          print m.encode('UTF-8')
+    else:
+      print 'There is nothing Notification'
+
 
 def add_plurk(argv):
   data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}

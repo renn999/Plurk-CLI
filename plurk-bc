@@ -8,7 +8,7 @@ _plurk()
     COMPREPLY=()
     _get_comp_words_by_ref cur
     if [ $COMP_CWORD -eq 1 ]; then
-        COMPREPLY=( $( compgen -W 'add get resp count_unread get_unread del edit mute unmute favor unfavor mar replurk unreplurk get_user_pub get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock' -- "$cur" ) )
+        COMPREPLY=( $( compgen -W 'add get resp count_unread get_unread del edit mute unmute favor unfavor mar replurk unreplurk get_user_pub get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock alert' -- "$cur" ) )
     elif [ $COMP_CWORD -ge 2 ];then
         if [ "${COMP_WORDS[1]}" == "get" ]; then
             COMPREPLY=( $( compgen -W '--offset --filter' -- "$cur" ) )
@@ -19,6 +19,10 @@ _plurk()
                 COMPREPLY=( $( compgen -W 'add get del' -- "$cur" ) )
             elif [ $COMP_CWORD -eq 4 -a "${COMP_WORDS[2]}" == "add" ];then
                 says_cp
+            fi
+        elif [ "${COMP_WORDS[1]}" == "alert" ]; then
+            if [ $COMP_CWORD -eq 2 ];then
+                COMPREPLY=( $( compgen -W 'afn afd dfs rnf allfn allfd' -- "$cur" ) )
             fi
         fi
     fi

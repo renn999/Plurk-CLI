@@ -7,8 +7,8 @@
 
 * New
 
-  * plurk syntax support.
-  * cliqus, block, function supoort.
+  * plurk syntax partial support.
+  * cliqus, block, alert function supoort.
   * `plurk add` more choise to private plurk.
 
 * Modify
