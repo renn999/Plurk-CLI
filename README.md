@@ -65,3 +65,11 @@ Readmore in `doc/doc.txt` or `man plurk`.
 ## Experiment
 
 Plurk notification via API 2.0
+```
+$ plurk --npn
+```
+To running...
+
+### Screen Shots
+![screenshot001](http://www.renn999.twbbs.org/Plurk-CLI/screenshot/Screenshot001.png)
+![screenshot002](http://www.renn999.twbbs.org/Plurk-CLI/screenshot/Screenshot002.png)
