@@ -6,6 +6,7 @@ This is a plurk Command Line tool. Let's you need less to open the browser to pl
 
 * [plurk-oauth](https://github.com/clsung/plurk-oauth)
 * [termcolor](http://pypi.python.org/pypi/termcolor)
+* [pynotify2](pypi.python.org/pypi/notify2)
 
 ## Build requirement
 
@@ -20,11 +21,11 @@ This is a plurk Command Line tool. Let's you need less to open the browser to pl
     python setup.py build
     sudo python setup.py install
 
-### Install termcolor
+### Install termcolor pynotify2
 
-    sudo pip install termcolor
+    sudo pip install termcolor notify2
     or
-    sudo easy_install termcolor
+    sudo easy_install termcolor notify2
 
 ## Insatll
 
@@ -60,3 +61,7 @@ $ sudo make dep
 ## Usage
 
 Readmore in `doc/doc.txt` or `man plurk`.
+
+## Experiment
+
+Plurk notification via API 2.0

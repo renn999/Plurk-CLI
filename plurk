@@ -1,11 +1,18 @@
 #!/usr/bin/env python
 
-import sys, json
+import sys, json, re, urllib2, os, time
 from plurk_oauth.PlurkAPI import PlurkAPI
-import os,time
 from termcolor import colored
+import pygtk
+pygtk.require('2.0')
+import notify2
+import gtk
 
-rows, columns = os.popen('stty size', 'r').read().split()
+try:
+  rows, columns = os.popen('stty size', 'r').read().split()
+except:
+  rows = 24
+  columns = 80
 LIMIT=20
 USER_HOME=os.path.expanduser('~')
 CONFIG_PATH = os.path.join(USER_HOME,'.plurk-cli')
@@ -37,7 +44,6 @@ else:
   except:
     print 'there is something wrong when reading the config to %s. Please remove it, and Try again.' % authorize_file
     exit()
-
 
 def b36en(num):
   alphabet = [ chr(i) for i in ( range(48,58) + range(97,123) ) ]
@@ -221,6 +227,15 @@ def main(argv):
       print p
   elif argv[0] == 'alert':
     alert_group(argv[1:])
+  elif argv[0] == '--npn':
+    new_plurk_notification()
+  elif argv[0] == 'test':
+    comet = plurk.callAPI('/APP/Realtime/getUserChannel')
+    print comet
+  elif argv[0] == 'test2':
+    data = {'plurk_id':1073934520,'replurkers_detail':1}
+    p = plurk.callAPI('/APP/Timeline/getPlurk',data)
+    print p
   else:
     print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
@@ -244,6 +259,61 @@ def main(argv):
 
 * readmore on doc."""
 
+
+def new_plurk_notification():
+  while 1:
+    try:
+      comet = plurk.callAPI('/APP/Realtime/getUserChannel')
+      break
+    except:
+      time.sleep(5)
+  comet_channel = comet['comet_server'][:comet['comet_server'].index('?')] + "?offset=%d&channel=%s"
+  cn = comet['channel_name']
+  jsonp_re = re.compile('CometChannel.scriptCallback\((.+)\);\s*');
+  new_offset = -1
+  #print comet_channel % (new_offset,cn)
+  if not notify2.init("New Plurk!"):
+    exit()
+  pp = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../lib/plurk'))
+  uri = "file://"+ pp +"/plurk-icon.png"
+  while 1:
+    while 1:
+      try:
+        req = urllib2.urlopen(comet_channel % (new_offset,cn), timeout=50)
+        break
+      except:
+        time.sleep(5)
+    rawdata = req.read()
+    match = jsonp_re.match(rawdata)
+    if match:
+        rawdata = match.group(1)
+    data = json.loads(rawdata)
+    msgs = data.get('data')
+    new_offset = data.get('new_offset', -1)
+    if not msgs:
+      continue
+    for msg in msgs:
+      data = {'plurk_id':int(msg['plurk_id']),'replurkers_detail':1}
+      while 1:
+        try:
+          p = plurk.callAPI('/APP/Timeline/getPlurk',data)
+          break
+        except:
+          time.sleep(5)
+      if msg['type']=='new_plurk' :
+        u = p['plurk_users'][str(msg['user_id'])]
+        m = u.get('display_name') if u.get('display_name') else u.get('nick_name')
+        if msg.get('replurker_id'):
+          ru = p['plurk_users'][str(msg['replurker_id'])]
+          rm = ru.get('display_name') if ru.get('display_name') else ru.get('nick_name')
+          m = u'%s %s %s' % (rm,'replurk', m)
+        q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['qualifier']
+        c = u'%s %s %s' % (m,q,msg['content_raw'])
+        n = notify2.Notification('new Plurk', c.encode('UTF-8'),uri)
+        n.set_timeout(0)
+        n.show()
+      if p:
+        print new_offset, msg['plurk_id'], p['plurk']['is_unread'], msg['type']
 
 def resp_group(argv):
   if argv[0] == 'add':
@@ -417,7 +487,7 @@ def out_put_plurk(i,p):
     i['qualifier_translated'] = None
   qu = qualifier_color( i['qualifier'], i['qualifier_translated'])
   plurk_uname = user_coloer(p[str(i['owner_id'])])
-  if 'replurker_id' in i and i['replurker_id']:
+  if 'replurker_id' in i and i['replurker_id'] and int(i['replurker_id']):
     replurk_uname = user_coloer(p[str(i['replurker_id'])])
     ma = u'%s %s %s %s' % ( replurk_uname, qualifier_color('replurk'), plurk_uname, qu)
   else:
@@ -485,7 +555,7 @@ def content_formater(text): ##need modify, too dirty.
   return ''.join(g_text)
 
 def user_coloer(plurk_user):
-  plurk_uname = plurk_user['display_name'] if 'display_name' in plurk_user else plurk_user['nick_name']
+  plurk_uname = plurk_user['display_name'] if plurk_user.get('display_name') else plurk_user['nick_name']
   plurk_uname = plurk_uname + '(@%s)' % plurk_user['nick_name']
   if not 'name_color' in plurk_user:
     plurk_user['name_color'] = None

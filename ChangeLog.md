@@ -14,3 +14,7 @@
 * Modify
   
   * plurk respond commed split to subcommend
+
+* Experiment
+  
+  * plark notifycation experiment, Read more in README.
