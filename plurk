@@ -5,8 +5,13 @@ from plurk_oauth.PlurkAPI import PlurkAPI
 from termcolor import colored
 import pygtk
 pygtk.require('2.0')
-import notify2
+import pynotify
 import gtk
+
+USER_HOME = os.path.expanduser('~')
+now_time = time.strftime("%Y%m%d%H%M%S", time.gmtime())
+fsock = open(os.path.join(USER_HOME,'.plurk-cli', now_time), 'w')
+sys.stderr = fsock
 
 try:
   rows, columns = os.popen('stty size', 'r').read().split()
@@ -14,7 +19,6 @@ except:
   rows = 24
   columns = 80
 LIMIT=20
-USER_HOME=os.path.expanduser('~')
 CONFIG_PATH = os.path.join(USER_HOME,'.plurk-cli')
 if not os.path.isdir(CONFIG_PATH):
   try:
@@ -66,7 +70,9 @@ def main(argv):
     'favor':  '/APP/Timeline/favoritePlurks',
     'unfavor':'/APP/Timeline/unfavoritePlurks',
     'mar':    '/APP/Timeline/markAsRead'}
-  if argv[0]=='add':
+  if not argv:
+    show_help()
+  elif argv[0]=='add':
     add_plurk(argv[1:])
   elif argv[0] == 'get':
     data={'limit':LIMIT}
@@ -229,15 +235,11 @@ def main(argv):
     alert_group(argv[1:])
   elif argv[0] == '--npn':
     new_plurk_notification()
-  elif argv[0] == 'test':
-    comet = plurk.callAPI('/APP/Realtime/getUserChannel')
-    print comet
-  elif argv[0] == 'test2':
-    data = {'plurk_id':1073934520,'replurkers_detail':1}
-    p = plurk.callAPI('/APP/Timeline/getPlurk',data)
-    print p
   else:
-    print """USAGE:    
+    show_help()
+
+def show_help():
+  print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
           get [--offset [time Type: YYYY-mm-ddTHH:MM:SS]] [--filter [only_user only_responded only_private only_favorite]]
           resp add [plurk_id] [qualifier] [content]
@@ -272,34 +274,34 @@ def new_plurk_notification():
   jsonp_re = re.compile('CometChannel.scriptCallback\((.+)\);\s*');
   new_offset = -1
   #print comet_channel % (new_offset,cn)
-  if not notify2.init("New Plurk!"):
-    exit()
   pp = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../lib/plurk'))
   uri = "file://"+ pp +"/plurk-icon.png"
+  pynotify.init("New Plurk!")
   while 1:
     while 1:
       try:
         req = urllib2.urlopen(comet_channel % (new_offset,cn), timeout=50)
         break
       except:
-        time.sleep(5)
+        time.sleep(3)
     rawdata = req.read()
     match = jsonp_re.match(rawdata)
     if match:
-        rawdata = match.group(1)
+      rawdata = match.group(1)
     data = json.loads(rawdata)
     msgs = data.get('data')
     new_offset = data.get('new_offset', -1)
     if not msgs:
       continue
     for msg in msgs:
+      t = None
       data = {'plurk_id':int(msg['plurk_id']),'replurkers_detail':1}
       while 1:
         try:
           p = plurk.callAPI('/APP/Timeline/getPlurk',data)
           break
         except:
-          time.sleep(5)
+          time.sleep(3)
       if msg['type']=='new_plurk' :
         u = p['plurk_users'][str(msg['user_id'])]
         m = u.get('display_name') if u.get('display_name') else u.get('nick_name')
@@ -309,11 +311,18 @@ def new_plurk_notification():
           m = u'%s %s %s' % (rm,'replurk', m)
         q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['qualifier']
         c = u'%s %s %s' % (m,q,msg['content_raw'])
-        n = notify2.Notification('new Plurk', c.encode('UTF-8'),uri)
-        n.set_timeout(0)
-        n.show()
+        t = 'New Plurk'
       if p:
         print new_offset, msg['plurk_id'], p['plurk']['is_unread'], msg['type']
+      if t:
+        while 1:
+          try:
+            n = pynotify.Notification(t, c.encode('UTF-8'), uri)
+            n.set_timeout(0)
+            n.show()
+            break
+          except:
+            time.sleep(3)
 
 def resp_group(argv):
   if argv[0] == 'add':
