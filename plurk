@@ -180,59 +180,12 @@ def main(argv):
     else:
       p = plurk.callAPI('/APP/Profile/getOwnProfile')
     print p
-  elif argv[0] == 'cliquelist':
-    p = plurk.callAPI('/APP/Cliques/getCliques')
-    for i in  p:
-      print i
-  elif argv[0] == 'cliqueuser' and len(argv) == 2 :
-    data = {'clique_name': argv[1] }
-    p = cli_u(data)
-    for i in p['id']:
-      j = p['id'].index(i)
-      m = u'%s (@%s)' % (p['display_name'][j],p['nick_name'][j])
-      print m.encode('UTF-8')
-  elif argv[0] == 'cliquecreate' and len(argv) > 1 :
-    data = {'clique_name': argv[1] }
-    p = plurk.callAPI('/APP/Cliques/createClique',data)
-    if p['success_text'] == 'OK':
-      print 'OK!'
-    else:
-      print 'Error!'
-  elif argv[0] == 'cliquemv' and len(argv) == 3 :
-    data = {'clique_name': argv[1], 'new_name':argv[2] }
-    p = plurk.callAPI('/APP/Cliques/renameClique',data)
-    if p['success_text'] == 'OK':
-      print 'OK!'
-    else:
-      print 'Error!'
-  elif argv[0] == 'cliqueadd' and len(argv) > 2 :
-    for i in argv[2:]:
-      data = {'clique_name': argv[1], 'user_id':i }
-      p = plurk.callAPI('/APP/Cliques/add',data)
-      print p
-  elif argv[0] == 'cliquerm' and len(argv) > 2 :
-    for i in argv[2:]:
-      data = {'clique_name': argv[1], 'user_id':i }
-      p = plurk.callAPI('/APP/Cliques/remove',data)
-      print p
-  elif argv[0] == 'blocklist':
-    try:
-      data = {'offset': (int(argv[1])-1)*10 }
-    except:
-      data = {}
-    p = plurk.callAPI('/APP/Blocks/get',data)
-  elif argv[0] == 'block' and len(argv) > 2:
-    for i in argv[1:]:
-      data = {'user_id':i }
-      p = plurk.callAPI('/APP/Blocks/block',data)
-      print p
-  elif argv[0] == 'unblock' and len(argv) > 2:
-    for i in argv[1:]:
-      data = {'user_id':i }
-      p = plurk.callAPI('/APP/Blocks/unblock',data)
-      print p
+  elif argv[0] == 'clique':
+    clique_group(argv[1:])
   elif argv[0] == 'alert':
     alert_group(argv[1:])
+  elif argv[0] == 'block':
+    block_group(argv[1:])
   elif argv[0] == '--npn':
     new_plurk_notification()
   else:
@@ -257,7 +210,7 @@ def show_help():
           replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           get_user_pub [user_id]
-          get_user_info cliquelist cliqueuser cliquecreate cliquemv cliqueadd cliquerm blocklist block unblock alert
+          get_user_info clique block alert
 
 * readmore on doc."""
 
@@ -310,7 +263,7 @@ def new_plurk_notification():
           rm = ru.get('display_name') if ru.get('display_name') else ru.get('nick_name')
           m = u'%s %s %s' % (rm,'replurk', m)
         q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['qualifier']
-        c = u'%s %s %s' % (m,q,msg['content_raw'])
+        c = u'%s %s %s \n http://www.plurk.com/p/%s' % (m , q, msg['content_raw'], b36en(int(msg['plurk_id'])))
         t = 'New Plurk'
       if p:
         print new_offset, msg['plurk_id'], p['plurk']['is_unread'], msg['type']
@@ -323,6 +276,75 @@ def new_plurk_notification():
             break
           except:
             time.sleep(3)
+
+
+def clique_group(argv)
+  elif argv[0] == 'list':
+    p = plurk.callAPI('/APP/Cliques/getCliques')
+    for i in  p:
+      print i
+  elif argv[0] == 'user' and len(argv) == 2 :
+    data = {'clique_name': argv[1] }
+    p = cli_u(data)
+    for i in p['id']:
+      j = p['id'].index(i)
+      m = u'%s (@%s)' % (p['display_name'][j],p['nick_name'][j])
+      print m.encode('UTF-8')
+  elif argv[0] == 'create' and len(argv) == 2 :
+    data = {'clique_name': argv[1] }
+    p = plurk.callAPI('/APP/Cliques/createClique',data)
+    if p['success_text'] == 'OK':
+      print 'OK!'
+    else:
+      print 'Error!'
+  elif argv[0] == 'mv' and len(argv) == 3 :
+    data = {'clique_name': argv[1], 'new_name':argv[2] }
+    p = plurk.callAPI('/APP/Cliques/renameClique',data)
+    if p['success_text'] == 'OK':
+      print 'OK!'
+    else:
+      print 'Error!'
+  elif argv[0] == 'add' and len(argv) > 2 :
+    for i in argv[2:]:
+      data = {'clique_name': argv[1], 'user_id':i }
+      p = plurk.callAPI('/APP/Cliques/add',data)
+      print p
+  elif argv[0] == 'rm' and len(argv) > 2 :
+    for i in argv[2:]:
+      data = {'clique_name': argv[1], 'user_id':i }
+      p = plurk.callAPI('/APP/Cliques/remove',data)
+      print p
+  else:
+    show_help()
+
+
+def block_group(argv):
+  if argv[0] == 'list':
+    try:
+      off = (int(argv[1])-1)*10
+      data = {'offset': off }
+    except:
+      off = 0
+      data = {}
+    p = plurk.callAPI('/APP/Blocks/get',data)
+    j=0
+    for i in p['users']:
+      print i['id'], i['display_name'] if i.get('display_name') else i['nick_name']
+      j+=1
+    print 'From %d to %d Total: %d' % (off+1, off+j, p['total'])
+  elif argv[0] == 'add' and len(argv) > 1:
+    for i in argv[1:]:
+      data = {'user_id':i }
+      p = plurk.callAPI('/APP/Blocks/block',data)
+      print p
+  elif argv[0] == 'rm' and len(argv) > 1:
+    for i in argv[1:]:
+      data = {'user_id':i }
+      p = plurk.callAPI('/APP/Blocks/unblock',data)
+      print p
+  else:
+    show_help()
+
 
 def resp_group(argv):
   if argv[0] == 'add':
