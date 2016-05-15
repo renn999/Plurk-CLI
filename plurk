@@ -3,19 +3,17 @@
 import sys, json, re, urllib2, os, time
 from plurk_oauth.PlurkAPI import PlurkAPI
 from termcolor import colored
-import pygtk
-pygtk.require('2.0')
-import pynotify
-import gtk
+import subprocess
+
 
 USER_HOME = os.path.expanduser('~')
-now_time = time.strftime("%Y%m%d%H%M%S", time.gmtime())
-fsock = open(os.path.join(USER_HOME,'.plurk-cli', now_time), 'w')
-sys.stderr = fsock
 
 try:
   rows, columns = os.popen('stty size', 'r').read().split()
 except:
+  now_time = time.strftime("%Y%m%d%H%M%S", time.gmtime())
+  fsock = open(os.path.join(USER_HOME,'.plurk-cli', now_time), 'w')
+  sys.stderr = fsock
   rows = 24
   columns = 80
 LIMIT=20
@@ -93,12 +91,7 @@ def main(argv):
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
   elif argv[0] in ['del', 'edit']:
-    if argv[1].isdigit():
-      plurk_id = int(argv[1])
-    else:
-      print 'Please input Plurk id in integer not Base36.'
-      exit()
-    data = {'plurk_id':plurk_id}
+    data = {'plurk_id':int(argv[1],36)}
     if argv[0] == 'del':
       p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
     elif argv[0] == 'edit' and len(argv) == 3:
@@ -187,7 +180,12 @@ def main(argv):
   elif argv[0] == 'block':
     block_group(argv[1:])
   elif argv[0] == '--npn':
-    new_plurk_notification()
+    try:
+      i = argv.index('--level')
+      l = argv[i+1]
+    except:
+      l = 0
+    new_plurk_notification(l)
   else:
     show_help()
 
@@ -210,26 +208,42 @@ def show_help():
           replurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           unreplurk [plurk_id#1 plurk_id#2 plurk_id#3 ...]
           get_user_pub [user_id]
-          get_user_info clique block alert
+          get_user_info clique block alert, ... etc.
 
-* readmore on doc."""
+* readmore on doc. Or call the `man plurk`"""
 
 
-def new_plurk_notification():
+def sendmessage(m):
+  subprocess.Popen(['notify-send', '-i', m[0], m[1], m[2]])
+  return
+
+def new_plurk_notification(level=0):
   while 1:
     try:
       comet = plurk.callAPI('/APP/Realtime/getUserChannel')
+      pui   = plurk.callAPI('/APP/Users/currUser')
+      urc   = plurk.callAPI('/APP/Polling/getUnreadCount')
       break
     except:
       time.sleep(5)
+  pp = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../lib/plurk'))
+  uri = pp +"/plurk-icon.png"
+  aur = urc.pop('all')
+  t = 'Plurk Notification Working...'
+  c = [str(j)+' '+i for i,j in urc.iteritems() if j]
+  c = u'Hello! %s. You have %s unread plurk%s.' % (pui['nick_name'], aur, (', '+', '.join(c)) if c else '')
+  while 1:
+    try:
+      n = [uri, t, c.encode('UTF-8')]
+      sendmessage(n)
+      break
+    except:
+      time.sleep(3)
   comet_channel = comet['comet_server'][:comet['comet_server'].index('?')] + "?offset=%d&channel=%s"
   cn = comet['channel_name']
   jsonp_re = re.compile('CometChannel.scriptCallback\((.+)\);\s*');
   new_offset = -1
   #print comet_channel % (new_offset,cn)
-  pp = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)),'../lib/plurk'))
-  uri = "file://"+ pp +"/plurk-icon.png"
-  pynotify.init("New Plurk!")
   while 1:
     while 1:
       try:
@@ -265,21 +279,33 @@ def new_plurk_notification():
         q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['qualifier']
         c = u'%s %s %s \n http://www.plurk.com/p/%s' % (m , q, msg['content_raw'], b36en(int(msg['plurk_id'])))
         t = 'New Plurk'
+      elif msg['type'] == 'new_response' and level:
+        if msg['plurk'].get('owner_id') == pui['id']:
+          t = 'New Respond to your Plurk'
+          q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['plurk']['qualifier']
+          c = u'%s %s %s %s %s' % (q, msg['plurk']['content_raw'], 
+                                msg['user'][str(msg['response']['user_id'])]['nick_name'], 
+                                msg['response']['qualifier'], msg['response']['content_raw'])
+        elif level > 1:
+          q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['plurk']['qualifier']
+          t = 'New Respond to %s %s %s' % (p['plurk_users'][str(p['plurk']['owner_id'])]['nick_name'], q, msg['plurk']['content_raw'])
+          u = p['plurk_users'][str(msg['plurk']['user_id'])]['nick_name'] if str(msg['plurk']['user_id']) in p['plurk_users'] else msg['user'][str(msg['plurk']['user_id'])]['nick_name']
+          c = u'%s %s %s' % (msg['user'][str(msg['response']['user_id'])]['nick_name'], 
+                             msg['response']['qualifier'], msg['response']['content_raw'])
       if p:
         print new_offset, msg['plurk_id'], p['plurk']['is_unread'], msg['type']
       if t:
         while 1:
           try:
-            n = pynotify.Notification(t, c.encode('UTF-8'), uri)
-            n.set_timeout(0)
-            n.show()
+            n = [uri, t, c.encode('UTF-8')]
+            sendmessage(n)
             break
           except:
             time.sleep(3)
 
 
-def clique_group(argv)
-  elif argv[0] == 'list':
+def clique_group(argv):
+  if argv[0] == 'list':
     p = plurk.callAPI('/APP/Cliques/getCliques')
     for i in  p:
       print i
@@ -293,29 +319,54 @@ def clique_group(argv)
   elif argv[0] == 'create' and len(argv) == 2 :
     data = {'clique_name': argv[1] }
     p = plurk.callAPI('/APP/Cliques/createClique',data)
-    if p['success_text'] == 'OK':
+    if 'success_text' in p:
       print 'OK!'
     else:
       print 'Error!'
   elif argv[0] == 'mv' and len(argv) == 3 :
     data = {'clique_name': argv[1], 'new_name':argv[2] }
     p = plurk.callAPI('/APP/Cliques/renameClique',data)
-    if p['success_text'] == 'OK':
+    if 'success_text' in p:
       print 'OK!'
     else:
       print 'Error!'
   elif argv[0] == 'add' and len(argv) > 2 :
     for i in argv[2:]:
-      data = {'clique_name': argv[1], 'user_id':i }
-      p = plurk.callAPI('/APP/Cliques/add',data)
-      print p
+      m = guid(i)
+      if m > 0:
+        data = {'clique_name': argv[1], 'user_id': m}
+        p = plurk.callAPI('/APP/Cliques/add',data)
+        n = (i,argv[1])
+      else:
+        p = {'error':''}
+      if 'success_text' in p:
+        print '%s add to %s OK!' % n
+      else:
+        print '%s add to %s error!' % n
   elif argv[0] == 'rm' and len(argv) > 2 :
     for i in argv[2:]:
-      data = {'clique_name': argv[1], 'user_id':i }
-      p = plurk.callAPI('/APP/Cliques/remove',data)
-      print p
+      m = guid(i)
+      if m:
+        data = {'clique_name': argv[1], 'user_id':m }
+        p = plurk.callAPI('/APP/Cliques/remove',data)
+        n = (i,argv[1])
+      else:
+        p = {'error':''}
+      if 'success_text' in p:
+        print '%s add to %s OK!' % n
+      else:
+        print '%s add to %s error!' % n
   else:
     show_help()
+
+
+friendsfans = {}
+def guid(i):
+  global friendsfans
+  if not len(friendsfans):
+    friendsfans = plurk.callAPI('/APP/FriendsFans/getCompletion')
+  m = [int(j) for j, k in friendsfans.iteritems() if k['nick_name'] == i]
+  return m[0] if len(m) else None
 
 
 def block_group(argv):
@@ -352,7 +403,7 @@ def resp_group(argv):
   elif argv[0] == 'get':
     get_resp(argv[1:])
   elif argv[0] == 'del':
-    data = {'plurk_id': int(argv[1]),'response_id':int(argv[2])}
+    data = {'plurk_id': int(argv[1], 36),'response_id':int(argv[2],36)}
     p = plurk.callAPI('/APP/Responses/responseDelete',data)
     if 'error_text' in p:
       print 'ERROR! %s.' % p['error_text']
@@ -426,30 +477,22 @@ def alert_group(argv):
 def add_plurk(argv):
   data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}
   if '-p' in argv:
-    p=None
     data['limited_to'] = []
     for i in argv[argv.index('-p')+1:]:
       if i[0]=='-':
         break
       elif i[0] == '@':
-        if not p:
-          p = plurk.callAPI('/APP/FriendsFans/getCompletion')
-        j = [int(j) for j, k in p.iteritems() if k['nick_name'] == i[1:]]
+        j = guid(i[1:])
         if not j:
           q = plurk.callAPI('/APP/Profile/getPublicProfile',{'user_id':i[1:]})
-          j = [q['user_info']['id']]
-        data['limited_to'].extend(j)
+          j = q['user_info']['id']
+        data['limited_to'].extend([j])
       elif i[0] == ':' :
         cli = {'clique_name': i[1:]}
         cu = cli_u(cli)
         data['limited_to'].extend(cu['id'])
-      else:
-        try:
-          int(i)
-        except:
-          pass
-        else:
-          data['limited_to'].append(int(i))
+      elif i.isdigit():
+        data['limited_to'].append(int(i))
   elif '-pf' in argv:
     data['limited_to'] = [0]
   if '-nc' in argv:
@@ -458,7 +501,7 @@ def add_plurk(argv):
     data['no_comments'] = 2
   p = plurk.callAPI('/APP/Timeline/plurkAdd',data)
   if not 'error_text' in p:
-    print 'url: http://www.plurk.com/p/'+b36en(p['plurk_id']) + '\nplurk_id: '+ str(p['plurk_id'])
+    print 'url: http://www.plurk.com/p/'+b36en(p['plurk_id']) + ' plurk_id: '+ b36en(p['plurk_id'])
   else:
     print p['error_text']
 
@@ -505,6 +548,7 @@ def out_put(p):
     last_time = i['posted']
     plurk_ids = plurk_ids + [i['plurk_id']]
   if first_time != None and last_time != None:
+    print first_time
     first_time = time.strptime(first_time,'%a, %d %b %Y %H:%M:%S %Z')
     last_time  = time.strptime(last_time ,'%a, %d %b %Y %H:%M:%S %Z')
     first_time = time.strftime('%Y-%m-%dT%H:%M:%S',first_time)
@@ -527,7 +571,7 @@ def out_put_plurk(i,p):
   print content_formater(i['content_raw']).encode("utf-8")
   l = str(i['response_count'])+ ' response(s)' if i['response_count'] else 'no response'
   k = colored(l,'white','on_red') if i['is_unread'] == 1 else l
-  m = 'plurk_id: '+str(i['plurk_id'])
+  m = 'plurk_id: '+b36en(i['plurk_id'])
   j = {'c':{},'uc':{}}
   if 'favorite' in i and i['favorite']:
     j['uc']['f'] = ' F '
@@ -553,7 +597,7 @@ def out_put_resp(p):
     content = content_formater(i['content_raw'])
     m =  u'%s %s %s' % (plurk_uname, qu, content)
     print m.encode("utf-8")
-    j = 'respond_id: '+str(i['id'])
+    j = 'respond_id: '+b36en(i['id'])
     print ' '*(int(columns)-len(j)) + j
     print '-'*int(columns)
   print 'Total: %d response(s)' % len(p['responses'])
@@ -612,7 +656,7 @@ def qualifier_color(qu,qu_tr=None):
     bg = 'on_magenta'
   elif qu in ['wonders']:
     bg = 'on_cyan'
-  elif qu in ['feels', 'thinks']:
+  elif qu in ['feels', 'thinks', 'whispers']:
     bg = 'on_blue'
   if not qu_tr:
     qu_tr = qu
@@ -621,19 +665,19 @@ def qualifier_color(qu,qu_tr=None):
 
 def add_resp(argv):
   data=dict()
-  data['plurk_id']=int(argv[0])
+  data['plurk_id']=int(argv[0], 36)
   data['qualifier']=argv[1]
   data['content'] =argv[2]
   p = plurk.callAPI('/APP/Responses/responseAdd',data)
-  print 'respond id: %d' % p['id']
+  print 'respond id: %s' % b36en(p['id'])
 
 
 def get_resp(argv):
-  p = plurk.callAPI('/APP/Timeline/getPlurk',{'plurk_id':argv[0]})
+  p = plurk.callAPI('/APP/Timeline/getPlurk',{'plurk_id':int(argv[0],36)})
   print '='*int(columns)
   out_put_plurk(p['plurk'],p['plurk_users'])
   print '='*int(columns)
-  p = plurk.callAPI('/APP/Responses/get',{'plurk_id':argv[0]})
+  p = plurk.callAPI('/APP/Responses/get',{'plurk_id':int(argv[0],36)})
   out_put_resp(p)
 
 
