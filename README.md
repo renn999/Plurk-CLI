@@ -61,7 +61,7 @@ $ sudo make dep
 
 Readmore in `doc/doc.txt` or `man plurk`.
 
-## Experiment
+## Experiment (Test in Ubuntu 16.04)
 
 Plurk notification via API 2.0
 ```
