@@ -20,7 +20,7 @@ This is a plurk Command Line tool. Let's you need less to open the browser to pl
     python setup.py build
     sudo python setup.py install
 
-### Install termcolor pynotify2
+### Install termcolor
 
     sudo pip install termcolor
     or
@@ -70,5 +70,5 @@ $ plurk --npn
 To running...
 
 ### Screen Shots
-![screenshot001](http://www.renn999.twbbs.org/Plurk-CLI/screenshot/Screenshot001.png)
-![screenshot002](http://www.renn999.twbbs.org/Plurk-CLI/screenshot/Screenshot002.png)
+![screenshot001](http://i.imgur.com/bz7YGUB.png)
+![screenshot002](http://i.imgur.com/PZaAgNS.png)
