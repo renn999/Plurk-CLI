@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys, json, re, urllib2, os, time
-from plurk_oauth.PlurkAPI import PlurkAPI
+from plurk_oauth import PlurkAPI
 from termcolor import colored
 import subprocess
 
@@ -277,7 +277,7 @@ def new_plurk_notification(level=0):
           rm = ru.get('display_name') if ru.get('display_name') else ru.get('nick_name')
           m = u'%s %s %s' % (rm,'replurk', m)
         q = p['plurk']['qualifier_translated'] if p['plurk'].get('qualifier_translated') else msg['qualifier']
-        c = u'%s %s %s \n http://www.plurk.com/p/%s' % (m , q, msg['content_raw'], b36en(int(msg['plurk_id'])))
+        c = u'%s %s %s \n https://www.plurk.com/p/%s' % (m , q, msg['content_raw'], b36en(int(msg['plurk_id'])))
         t = 'New Plurk'
       elif msg['type'] == 'new_response' and level:
         if msg['plurk'].get('owner_id') == pui['id']:
@@ -501,7 +501,7 @@ def add_plurk(argv):
     data['no_comments'] = 2
   p = plurk.callAPI('/APP/Timeline/plurkAdd',data)
   if not 'error_text' in p:
-    print 'url: http://www.plurk.com/p/'+b36en(p['plurk_id']) + ' plurk_id: '+ b36en(p['plurk_id'])
+    print 'url: https://www.plurk.com/p/'+b36en(p['plurk_id']) + ' plurk_id: '+ b36en(p['plurk_id'])
   else:
     print p['error_text']
 
