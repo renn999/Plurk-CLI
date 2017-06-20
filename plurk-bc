@@ -32,7 +32,7 @@ complete -F _plurk plurk
 
 says_cp()
 {
-    COMPREPLY=( $( compgen -W 'loves likes shares gives hates wants has will asks wishes was feels thinks says is : freestyle hopes needs wonders' -- "$cur" ) )
+    COMPREPLY=( $( compgen -W 'loves likes shares gives hates wants has will asks wishes was feels thinks says is : freestyle hopes needs wonders eats writes buys plays sells' -- "$cur" ) )
 }
 
 # Local variables:
