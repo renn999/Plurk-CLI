@@ -4,6 +4,7 @@ import sys, json, re, urllib2, os, time
 from plurk_oauth import PlurkAPI
 from termcolor import colored
 import subprocess
+import click
 
 if sys.version_info >= (2, 7, 9):
   import ssl
@@ -63,8 +64,10 @@ def b36en(num):
   arr.reverse()
   return ''.join(arr)
 
-
-def main(argv):
+@click.group()
+def main():
+  pass
+'''
   api = {
     'mute':   '/APP/Timeline/mutePlurks',
     'unmute': '/APP/Timeline/unmutePlurks',
@@ -191,6 +194,8 @@ def main(argv):
     new_plurk_notification(l)
   else:
     show_help()
+'''
+
 
 def show_help():
   print """USAGE:    
@@ -477,6 +482,12 @@ def alert_group(argv):
       print 'There is nothing Notification'
 
 
+
+@cli.command('add')
+@click.argument('content', nargs=-1, default = None)
+@click.option('--private','-p', multiple=True)
+@click.option('--no-comments','-nc', is_flag=True)
+@click.option('--friend-comments','-fc', is_flag=True)
 def add_plurk(argv):
   data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}
   if '-p' in argv:
@@ -685,4 +696,4 @@ def get_resp(argv):
 
 
 if __name__ == '__main__':
-  main(sys.argv[1:])
+  main()
