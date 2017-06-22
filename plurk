@@ -6,6 +6,8 @@ from termcolor import colored
 import subprocess
 import click
 
+
+
 if sys.version_info >= (2, 7, 9):
   import ssl
   ssl._create_default_https_context = ssl._create_unverified_context
@@ -76,8 +78,6 @@ def main():
     'mar':    '/APP/Timeline/markAsRead'}
   if not argv:
     show_help()
-  elif argv[0]=='add':
-    add_plurk(argv[1:])
   elif argv[0] == 'get':
     data={'limit':LIMIT}
     if '--offset' in argv:
@@ -481,21 +481,27 @@ def alert_group(argv):
     else:
       print 'There is nothing Notification'
 
-
-
-@cli.command('add')
+#plurk add group
+@main.command('add', help='Post a plurk.')
+@click.argument('qualifier', nargs=1, default = ':')
 @click.argument('content', nargs=-1, default = None)
 @click.option('--private','-p', multiple=True)
+@click.option('--friend-plurk','-fp', is_flag=True)
+@click.option('--personal-plurk','-pp', is_flag=True)
 @click.option('--no-comments','-nc', is_flag=True)
 @click.option('--friend-comments','-fc', is_flag=True)
-def add_plurk(argv):
-  data = {'content':argv[1],'qualifier':argv[0],'lang':'tr_ch','limit': LIMIT}
-  if '-p' in argv:
+@click.pass_context
+def add_plurk(ctx, qualifier, content, private, friend_plurk, personal_plurk, no_comments, friend_comments):
+  data = {'content': ' '.join(map(str,content)), 'qualifier': qualifier, 'lang': 'tr_ch'}
+  if len(private):
     data['limited_to'] = []
-    for i in argv[argv.index('-p')+1:]:
-      if i[0]=='-':
-        break
-      elif i[0] == '@':
+    pg = ()
+
+    for i in private:
+      pg = pg + i.split(' ')
+
+    for i in pg:
+      if i[0] == '@':
         j = guid(i[1:])
         if not j:
           q = plurk.callAPI('/APP/Profile/getPublicProfile',{'user_id':i[1:]})
@@ -507,12 +513,20 @@ def add_plurk(argv):
         data['limited_to'].extend(cu['id'])
       elif i.isdigit():
         data['limited_to'].append(int(i))
-  elif '-pf' in argv:
+      else:
+        click.echo('Error: private option con only contain null, \'@\'user_id, \':\'clique_name, digit_id.')
+        exit()
+
+  if friend_plurk:
     data['limited_to'] = [0]
-  if '-nc' in argv:
+  if personal_plurk:
+    data['limited_to'] = []
+
+  if no_comments:
     data['no_comments'] = 1
-  elif '-fc' in argv:
+  if friend_comments:
     data['no_comments'] = 2
+
   p = plurk.callAPI('/APP/Timeline/plurkAdd',data)
   if not 'error_text' in p:
     print 'url: https://www.plurk.com/p/'+b36en(p['plurk_id']) + ' plurk_id: '+ b36en(p['plurk_id'])
