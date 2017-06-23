@@ -96,19 +96,6 @@ def main():
         data['filter'] = None
     p = plurk.callAPI('/APP/Timeline/getPlurks',data)
     out_put(p)
-  elif argv[0] in ['del', 'edit']:
-    data = {'plurk_id':int(argv[1],36)}
-    if argv[0] == 'del':
-      p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
-    elif argv[0] == 'edit' and len(argv) == 3:
-      data['content'] = argv[2]
-      p = plurk.callAPI('/APP/Timeline/plurkEdit',data)
-    else:
-      print "there is something wrong in argvalues."
-    if 'error_text' in p:
-      print p['error_text']
-    else:
-      print 'OK!'
   elif argv[0] == 'resp':
     resp_group(argv[1:])
   elif argv[0] == 'count_unread':
@@ -192,13 +179,10 @@ def main():
     except:
       l = 0
     new_plurk_notification(l)
-  else:
-    show_help()
 '''
 
-
+"""
 def show_help():
-  print """USAGE:    
     plurk add [qualifier] [content] [-p -nc -fc]
           get [--offset [time Type: YYYY-mm-ddTHH:MM:SS]] [--filter [only_user only_responded only_private only_favorite]]
           resp add [plurk_id] [qualifier] [content]
@@ -218,8 +202,8 @@ def show_help():
           get_user_pub [user_id]
           get_user_info clique block alert, ... etc.
 
-* readmore on doc. Or call the `man plurk`"""
-
+* readmore on doc. Or call the `man plurk`
+"""
 
 def sendmessage(m):
   subprocess.Popen(['notify-send', '-i', m[0], m[1], m[2]])
@@ -481,6 +465,7 @@ def alert_group(argv):
     else:
       print 'There is nothing Notification'
 
+
 #plurk add group
 @main.command('add', help='Post a plurk.')
 @click.argument('qualifier', nargs=1, default = ':')
@@ -532,6 +517,32 @@ def add_plurk(ctx, qualifier, content, private, friend_plurk, personal_plurk, no
     print 'url: https://www.plurk.com/p/'+b36en(p['plurk_id']) + ' plurk_id: '+ b36en(p['plurk_id'])
   else:
     print p['error_text']
+
+
+@main.command('del', help='del a plurk.')
+@click.argument('plurk_ID', default = None)
+@click.pass_context
+def del_plurk(ctx, plurk_id):
+  data = {'plurk_id':int(plurk_id, 36)}
+  p = plurk.callAPI('/APP/Timeline/plurkDelete',data)
+  if 'error_text' in p:
+    click.echo(p['error_text'])
+  else:
+    click.echo('OK!')
+
+
+@main.command('edit', help='edit a plurk.')
+@click.argument('plurk_ID', nargs=1, default = None)
+@click.argument('content', nargs=-1, default = None)
+@click.pass_context
+def edit_plurk(ctx, plurk_id, content):
+  data = {'plurk_id':int(plurk_id,36)}
+  data['content'] = ' '.join(map(str,content))
+  p = plurk.callAPI('/APP/Timeline/plurkEdit',data)
+  if 'error_text' in p:
+    click.echo(p['error_text'])
+  else:
+    click.echo('OK!')
 
 
 def get_last_unread_time():
@@ -656,6 +667,7 @@ def content_formater(text): ##need modify, too dirty.
       g_text = g_text + [ j ]
   #print colored('test','grey','on_grey',attrs=['dark','reverse'])
   return ''.join(g_text)
+
 
 def user_coloer(plurk_user):
   plurk_uname = plurk_user['display_name'] if plurk_user.get('display_name') else plurk_user['nick_name']
