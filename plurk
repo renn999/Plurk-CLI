@@ -5,6 +5,9 @@ from plurk_oauth import PlurkAPI
 from termcolor import colored
 import subprocess
 
+if sys.version_info >= (2, 7, 9):
+  import ssl
+  ssl._create_default_https_context = ssl._create_unverified_context
 
 USER_HOME = os.path.expanduser('~')
 
@@ -647,7 +650,7 @@ def user_coloer(plurk_user):
 
 
 def qualifier_color(qu,qu_tr=None):
-  if qu in ['loves', 'likes', 'shares', 'gives', 'says', 'is']:
+  if qu in ['loves', 'likes', 'shares', 'gives', 'says', 'is', 'plays', 'buys', 'sells', 'eats', 'writes']:
     bg = 'on_red'
   elif qu in ['hates', 'has', 'was', ':', 'freestyle']:
     bg = 'on_grey'
